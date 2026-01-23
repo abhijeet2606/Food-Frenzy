@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     public void SetState(GameState newState)
     {
         CurrentState = newState;
-        // Trigger events here
+        // Trigger events here  fdgdf
     }
 
     public void ReloadScene()
