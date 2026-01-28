@@ -6,7 +6,10 @@ public enum PowerupType
 {
     None,
     Knife, // Destroy single item
-    // Add more types as needed
+    Oven, // Explosion (3x3)
+    Blender, // Shuffle Board
+    Pan, // Destroy Row
+    Hat // Color Bomb (Destroy all of same color)
 }
 
 public class PowerupManager : MonoBehaviour
@@ -60,6 +63,18 @@ public class PowerupManager : MonoBehaviour
         {
             case PowerupType.Knife:
                 boardManager.ApplyKnifePowerup(target);
+                break;
+            case PowerupType.Oven:
+                boardManager.ApplyOvenPowerup(target);
+                break;
+            case PowerupType.Blender:
+                boardManager.ApplyBlenderPowerup();
+                break;
+            case PowerupType.Pan:
+                boardManager.ApplyPanPowerup(target);
+                break;
+            case PowerupType.Hat:
+                boardManager.ApplyHatPowerup(target);
                 break;
         }
 

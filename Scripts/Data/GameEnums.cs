@@ -8,7 +8,8 @@ public enum BonusType
 {
     None = 0,
     DestroyWholeRowColumn = 1 << 0,
-    // Add more types here e.g. Bomb = 1 << 1
+    Explosion = 1 << 1,
+    ColorBomb = 1 << 2
 }
 
 public static class BonusTypeUtilities
@@ -19,6 +20,16 @@ public static class BonusTypeUtilities
     public static bool ContainsDestroyWholeRowColumn(BonusType bt)
     {
         return (bt & BonusType.DestroyWholeRowColumn) == BonusType.DestroyWholeRowColumn;
+    }
+
+    public static bool ContainsExplosion(BonusType bt)
+    {
+        return (bt & BonusType.Explosion) == BonusType.Explosion;
+    }
+
+    public static bool ContainsColorBomb(BonusType bt)
+    {
+        return (bt & BonusType.ColorBomb) == BonusType.ColorBomb;
     }
 }
 

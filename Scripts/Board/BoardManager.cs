@@ -30,10 +30,14 @@ public class BoardManager : MonoBehaviour
 
     [Header("Level Goals")]
     public List<LevelGoal> levelGoals;
+    private List<GameObject> activeFoodPrefabs;
 
     // Board Constants
-public Vector2 CandySize = new Vector2(1.7f, 1.7f);
-public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
+    public Vector2 CandySize = new Vector2(1.7f, 1.7f);
+    public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
+    
+    // Offset to keep the board centered relative to the screen/UI
+    public Vector2 BoardCenterOffset = new Vector2(0f, -1.0f);
 
 
     private GameState state = GameState.None;
@@ -57,21 +61,19 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
     void Start()
     {
         InitializeTypesOnPrefabShapesAndBonuses();
-        SetupLevelGoals();
+        SetupLevel();
+        if (uiManager != null) uiManager.SetupGoals(levelGoals, FoodPrefabs);
         InitializeBoardAndSpawnPositions();
         StartCheckForPotentialMatches();
     }
 
-    private void SetupLevelGoals()
+    private void SetupLevel()
     {
-        maxMoves = 20;
-        currentMoves = maxMoves;
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        LevelData data = LevelManager.Instance.LoadLevel(currentLevel);
 
-        // Ensure levelGoals is initialized
-        if (levelGoals == null)
-        {
-            levelGoals = new List<LevelGoal>();
-        }
+        if (levelGoals == null) levelGoals = new List<LevelGoal>();
+        else levelGoals.Clear();
 
         // Helper to find prefab name based on partial string
         string FindPrefabName(string partialName)
@@ -81,47 +83,96 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
                 if (prefab.name.ToLower().Contains(partialName.ToLower()))
                     return prefab.name;
             }
-            return partialName; // Fallback to the partial name if not found
+            return partialName; 
         }
 
-        // Define the missions: 15 burgers, 15 tomatoes, 10 cheese
+        if (data != null)
+        {
+            GameConstants.Rows = data.rows;
+            GameConstants.Columns = data.columns;
+            maxMoves = data.moves;
+            currentMoves = maxMoves;
+
+            // Setup Food Types
+            activeFoodPrefabs = new List<GameObject>();
+            foreach (string type in data.foodTypes)
+            {
+                foreach (var prefab in FoodPrefabs)
+                {
+                    if (prefab.name.ToLower().Contains(type.ToLower()))
+                    {
+                        activeFoodPrefabs.Add(prefab);
+                        break;
+                    }
+                }
+            }
+            if (activeFoodPrefabs.Count == 0) activeFoodPrefabs.AddRange(FoodPrefabs);
+
+            // Setup Goals
+            foreach (var goalData in data.goals)
+            {
+                string targetName = FindPrefabName(goalData.type);
+                levelGoals.Add(new LevelGoal
+                {
+                    TargetPrefabName = targetName,
+                    AmountNeeded = goalData.count,
+                    AmountCollected = 0
+                });
+            }
+
+            Debug.Log($"Level {data.levelId} loaded. Size: {data.rows}x{data.columns}, Moves: {data.moves}");
+        }
+        else
+        {
+            // Fallback for testing or if file missing
+            SetupFallbackLevel(currentLevel);
+        }
+    }
+
+    private void SetupFallbackLevel(int currentLevel)
+    {
+        maxMoves = 20 + (currentLevel * 2); 
+        currentMoves = maxMoves;
+        activeFoodPrefabs = new List<GameObject>(FoodPrefabs);
+        
+        // Use default game constants if fallback
+        GameConstants.Rows = 6;
+        GameConstants.Columns = 6;
+
+        // Helper to find prefab name based on partial string
+        string FindPrefabName(string partialName)
+        {
+            foreach (var prefab in FoodPrefabs)
+            {
+                if (prefab.name.ToLower().Contains(partialName.ToLower()))
+                    return prefab.name;
+            }
+            return partialName; 
+        }
+
+        int baseAmount = 10 + (currentLevel * 2);
+        
         var missions = new (string name, int amount)[]
         {
-            ("burger", 15),
-            ("tomato", 15),
-            ("cheese", 10)
+            ("burger", baseAmount),
+            ("tomato", baseAmount),
+            ("cheese", 10 + currentLevel)
         };
 
-        // Update existing goals or add new ones
         for (int i = 0; i < missions.Length; i++)
         {
             string targetName = FindPrefabName(missions[i].name);
             int amount = missions[i].amount;
 
-            if (i < levelGoals.Count)
+            levelGoals.Add(new LevelGoal
             {
-                // Update existing goal
-                levelGoals[i].TargetPrefabName = targetName;
-                levelGoals[i].AmountNeeded = amount;
-                levelGoals[i].AmountCollected = 0;
-            }
-            else
-            {
-                // Add new goal (Note: UI references like GoalCountText will be null and need Inspector assignment)
-                levelGoals.Add(new LevelGoal
-                {
-                    TargetPrefabName = targetName,
-                    AmountNeeded = amount,
-                    AmountCollected = 0
-                });
-            }
+                TargetPrefabName = targetName,
+                AmountNeeded = amount,
+                AmountCollected = 0
+            });
         }
         
-        // Remove extra goals if any
-        if (levelGoals.Count > missions.Length)
-        {
-            levelGoals.RemoveRange(missions.Length, levelGoals.Count - missions.Length);
-        }
+        Debug.Log($"Fallback Level {currentLevel} started. Moves: {maxMoves}");
     }
 
     private void InitializeTypesOnPrefabShapesAndBonuses()
@@ -141,6 +192,7 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
     public void InitializeBoardAndSpawnPositions()
     {
         InitializeVariables();
+        AdjustCameraAndBoardPosition();
 
         if (grid != null)
             DestroyAllFood();
@@ -214,6 +266,37 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
         }
     }
 
+    private void AdjustCameraAndBoardPosition()
+    {
+        // Calculate Board Dimensions
+        float boardWidth = GameConstants.Columns * CandySize.x;
+        float boardHeight = GameConstants.Rows * CandySize.y;
+
+        // Calculate Origin (Bottom-Left Cell Center) based on Center Offset
+        BottomRight = new Vector2(
+            BoardCenterOffset.x - (boardWidth / 2f) + (CandySize.x / 2f),
+            BoardCenterOffset.y - (boardHeight / 2f) + (CandySize.y / 2f)
+        );
+
+        // Adjust Camera Size
+        if (Camera.main != null)
+        {
+            // Vertical Fit: Board Height + Padding (Top/Bottom UI space)
+            float verticalSize = (boardHeight / 2f) + 3.0f;
+
+            // Horizontal Fit: Board Width + Padding
+            float aspect = Camera.main.aspect;
+            float horizontalSize = ((boardWidth / 2f) + 1.0f) / aspect;
+
+            Camera.main.orthographicSize = Mathf.Max(verticalSize, horizontalSize);
+            
+            // Center Camera on X axis
+            Vector3 camPos = Camera.main.transform.position;
+            camPos.x = BoardCenterOffset.x;
+            Camera.main.transform.position = camPos;
+        }
+    }
+
     private void DestroyAllFood()
     {
         for (int row = 0; row < GameConstants.Rows; row++)
@@ -243,7 +326,7 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
             if (Input.GetMouseButtonDown(0))
             {
                 var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-                if (hit.collider != null)
+                if (hit.collider != null && hit.collider.GetComponent<FoodItem>() != null)
                 {
                     hitGo = hit.collider.gameObject;
                     firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -372,16 +455,37 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
         }
 
 
-        bool addBonus = totalMatches.Count >= GameConstants.MinimumMatchesForBonus &&
-            !BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGomatchesInfo.BonusesContained) &&
-            !BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGo2matchesInfo.BonusesContained);
-
+        BonusType bonusToCreate = BonusType.None;
         FoodItem hitGoCache = null;
-        if (addBonus)
+
+        var b1 = grid.AnalyzeMatchShape(hitGo);
+        var b2 = grid.AnalyzeMatchShape(hitGo2);
+
+        if (b1 == BonusType.ColorBomb || b2 == BonusType.ColorBomb)
         {
-            var sameTypeGo = hitGomatchesInfo.MatchedFood.Count() > 0 ? hitGo : hitGo2;
-            hitGoCache = sameTypeGo.GetComponent<FoodItem>();
+            bonusToCreate = BonusType.ColorBomb;
+            hitGoCache = (b1 == BonusType.ColorBomb) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
         }
+        else if (b1 == BonusType.Explosion || b2 == BonusType.Explosion)
+        {
+            bonusToCreate = BonusType.Explosion;
+            hitGoCache = (b1 == BonusType.Explosion) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
+        }
+        else if (b1 == BonusType.DestroyWholeRowColumn || b2 == BonusType.DestroyWholeRowColumn)
+        {
+            bonusToCreate = BonusType.DestroyWholeRowColumn;
+            hitGoCache = (b1 == BonusType.DestroyWholeRowColumn) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
+        }
+
+        if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGomatchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGo2matchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsExplosion(hitGomatchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsExplosion(hitGo2matchesInfo.BonusesContained))
+        {
+            bonusToCreate = BonusType.None;
+        }
+
+        bool addBonus = (bonusToCreate != BonusType.None);
 
         int timesRun = 1;
         while (totalMatches.Count >= GameConstants.MinimumMatches)
@@ -422,11 +526,20 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
                 isGameOver = true;
                 if (uiManager != null) uiManager.ShowWin();
                 state = GameState.Win;
+                
+                // Advance to next level logic
+                int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+                PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
+                Debug.Log($"Level {currentLevel} complete! advancing to Level {currentLevel + 1}");
+                
+                // Wait a moment then reload (or wait for UI input if we had a next button)
+                StartCoroutine(WaitAndReloadScene());
+                
                 yield break;
             }
 
             if (addBonus)
-                CreateBonus(hitGoCache);
+                CreateBonus(hitGoCache, bonusToCreate);
 
             addBonus = false;
 
@@ -460,7 +573,7 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
         }
     }
 
-    private void CreateBonus(FoodItem hitGoCache)
+    private void CreateBonus(FoodItem hitGoCache, BonusType bonusType)
     {
         GameObject bonusPrefab = GetBonusFromType(hitGoCache.Type);
         if (bonusPrefab == null) return;
@@ -472,7 +585,7 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
         grid[hitGoCache.Row, hitGoCache.Column] = Bonus;
         var BonusShape = Bonus.GetComponent<FoodItem>();
         BonusShape.Assign(hitGoCache.Type, hitGoCache.Row, hitGoCache.Column);
-        BonusShape.Bonus |= BonusType.DestroyWholeRowColumn;
+        BonusShape.Bonus |= bonusType;
     }
 
     private AlteredFoodInfo CreateNewCandyInSpecificColumns(IEnumerable<int> columnsWithMissingCandy)
@@ -525,6 +638,8 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
 
     private GameObject GetRandomFood()
     {
+        if (activeFoodPrefabs != null && activeFoodPrefabs.Count > 0)
+            return activeFoodPrefabs[Random.Range(0, activeFoodPrefabs.Count)];
         return FoodPrefabs[Random.Range(0, FoodPrefabs.Length)];
     }
 
@@ -592,6 +707,78 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
             }
     }
 
+    private void ShuffleBoard()
+    {
+        if (state != GameState.None) return;
+        state = GameState.Animating;
+
+        List<GameObject> allFood = new List<GameObject>();
+        for (int row = 0; row < GameConstants.Rows; row++)
+        {
+            for (int column = 0; column < GameConstants.Columns; column++)
+            {
+                allFood.Add(grid[row, column]);
+            }
+        }
+
+        int index = 0;
+        for (int row = 0; row < GameConstants.Rows; row++)
+        {
+            for (int column = 0; column < GameConstants.Columns; column++)
+            {
+                // Randomly swap with remaining items to ensure randomness
+                int swapIndex = UnityEngine.Random.Range(index, allFood.Count);
+                GameObject temp = allFood[index];
+                allFood[index] = allFood[swapIndex];
+                allFood[swapIndex] = temp;
+                
+                GameObject obj = allFood[index];
+
+                int retryCount = 0;
+                while (
+                   (column >= 2 && grid[row, column - 1].GetComponent<FoodItem>().IsSameType(obj.GetComponent<FoodItem>()) && grid[row, column - 2].GetComponent<FoodItem>().IsSameType(obj.GetComponent<FoodItem>()))
+                   ||
+                   (row >= 2 && grid[row - 1, column].GetComponent<FoodItem>().IsSameType(obj.GetComponent<FoodItem>()) && grid[row - 2, column].GetComponent<FoodItem>().IsSameType(obj.GetComponent<FoodItem>()))
+                )
+                {
+                    swapIndex = UnityEngine.Random.Range(index + 1, allFood.Count);
+                    if (swapIndex >= allFood.Count) 
+                    {
+                         break;
+                    }
+
+                    temp = allFood[index];
+                    allFood[index] = allFood[swapIndex];
+                    allFood[swapIndex] = temp;
+
+                    obj = allFood[index];
+                    retryCount++;
+                    if (retryCount > 100) break;
+                }
+
+                grid[row, column] = obj;
+                obj.GetComponent<FoodItem>().Row = row;
+                obj.GetComponent<FoodItem>().Column = column;
+                index++;
+            }
+        }
+
+        foreach (var item in allFood)
+        {
+            Vector2 pos = BottomRight + new Vector2(item.GetComponent<FoodItem>().Column * CandySize.x, item.GetComponent<FoodItem>().Row * CandySize.y);
+            item.transform.DOMove(pos, 0.5f);
+        }
+
+        StartCoroutine(OnShuffleComplete());
+    }
+
+    private IEnumerator OnShuffleComplete()
+    {
+        yield return new WaitForSeconds(0.5f);
+        state = GameState.None;
+        StartCheckForPotentialMatches();
+    }
+
     private IEnumerator CheckPotentialMatches()
     {
         yield return new WaitForSeconds(GameConstants.WaitBeforePotentialMatchesCheck);
@@ -605,6 +792,16 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
                 yield return new WaitForSeconds(GameConstants.WaitBeforePotentialMatchesCheck);
             }
         }
+        else
+        {
+            ShuffleBoard();
+        }
+    }
+
+    private IEnumerator WaitAndReloadScene()
+    {
+        yield return new WaitForSeconds(3.0f); // Wait for win animation/celebration
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
 
     private bool CheckWinCondition()
@@ -619,25 +816,83 @@ public Vector2 BottomRight = new Vector2(-3.5f, -5.8f);
 
     public void ApplyKnifePowerup(GameObject item)
     {
-        StartCoroutine(DestroySingleItemRoutine(item));
+        StartCoroutine(DestroyItemsRoutine(new List<GameObject> { item }));
     }
 
-    private IEnumerator DestroySingleItemRoutine(GameObject item)
+    public void ApplyOvenPowerup(GameObject item)
+    {
+        var shape = item.GetComponent<FoodItem>();
+        int row = shape.Row;
+        int col = shape.Column;
+        List<GameObject> items = new List<GameObject>();
+        for (int r = row - 1; r <= row + 1; r++)
+        {
+            for (int c = col - 1; c <= col + 1; c++)
+            {
+                if (r >= 0 && r < GameConstants.Rows && c >= 0 && c < GameConstants.Columns)
+                {
+                    if (grid[r, c] != null) items.Add(grid[r, c]);
+                }
+            }
+        }
+        StartCoroutine(DestroyItemsRoutine(items));
+    }
+
+    public void ApplyPanPowerup(GameObject item)
+    {
+        int row = item.GetComponent<FoodItem>().Row;
+        List<GameObject> items = new List<GameObject>();
+        for (int col = 0; col < GameConstants.Columns; col++)
+        {
+            if (grid[row, col] != null) items.Add(grid[row, col]);
+        }
+        StartCoroutine(DestroyItemsRoutine(items));
+    }
+
+    public void ApplyHatPowerup(GameObject item)
+    {
+        string type = item.GetComponent<FoodItem>().Type;
+        List<GameObject> items = new List<GameObject>();
+        for (int r = 0; r < GameConstants.Rows; r++)
+        {
+            for (int c = 0; c < GameConstants.Columns; c++)
+            {
+                var go = grid[r, c];
+                if (go != null && go.GetComponent<FoodItem>().Type == type)
+                {
+                    items.Add(go);
+                }
+            }
+        }
+        StartCoroutine(DestroyItemsRoutine(items));
+    }
+
+    public void ApplyBlenderPowerup()
+    {
+        ShuffleBoard();
+    }
+
+    private IEnumerator DestroyItemsRoutine(IEnumerable<GameObject> items)
     {
         state = GameState.Animating;
 
-        var shape = item.GetComponent<FoodItem>();
-        int col = shape.Column;
-        
-        grid.Remove(item);
-        RemoveFromScene(item);
+        List<int> affectedColumns = new List<int>();
+
+        foreach (var item in items)
+        {
+            if (item == null) continue;
+            var shape = item.GetComponent<FoodItem>();
+            if (!affectedColumns.Contains(shape.Column))
+                affectedColumns.Add(shape.Column);
+
+            grid.Remove(item);
+            RemoveFromScene(item);
+        }
 
         yield return new WaitForSeconds(GameConstants.ExplosionDuration);
 
-        var columns = new List<int> { col };
-
-        var collapsedCandyInfo = grid.Collapse(columns);
-        var newCandyInfo = CreateNewCandyInSpecificColumns(columns);
+        var collapsedCandyInfo = grid.Collapse(affectedColumns);
+        var newCandyInfo = CreateNewCandyInSpecificColumns(affectedColumns);
 
         int maxDistance = Mathf.Max(collapsedCandyInfo.MaxDistance, newCandyInfo.MaxDistance);
 

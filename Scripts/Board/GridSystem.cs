@@ -28,6 +28,21 @@ public class GridSystem
         }
     }
 
+    public BonusType AnalyzeMatchShape(GameObject go)
+    {
+        var h = GetMatchesHorizontally(go);
+        var v = GetMatchesVertically(go);
+        
+        int hCount = h.Count();
+        int vCount = v.Count();
+        
+        if (hCount >= 5 || vCount >= 5) return BonusType.ColorBomb;
+        if (hCount >= 3 && vCount >= 3) return BonusType.Explosion; // T or L shape
+        if (hCount == 4 || vCount == 4) return BonusType.DestroyWholeRowColumn;
+        
+        return BonusType.None;
+    }
+
     public void Swap(GameObject g1, GameObject g2)
     {
         backupG1 = g1;
@@ -77,6 +92,20 @@ public class GridSystem
             if (!BonusTypeUtilities.ContainsDestroyWholeRowColumn(matchesInfo.BonusesContained))
                 matchesInfo.BonusesContained |= BonusType.DestroyWholeRowColumn;
         }
+        if (ContainsExplosionBonus(horizontalMatches))
+        {
+            var explosionMatches = GetExplosionRange(horizontalMatches);
+            matchesInfo.AddObjectRange(explosionMatches);
+            if (!BonusTypeUtilities.ContainsExplosion(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Explosion;
+        }
+        if (ContainsColorBomb(horizontalMatches))
+        {
+            var colorBombMatches = GetColorBombRange(horizontalMatches);
+            matchesInfo.AddObjectRange(colorBombMatches);
+            if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.ColorBomb;
+        }
         matchesInfo.AddObjectRange(horizontalMatches);
 
         var verticalMatches = GetMatchesVertically(go);
@@ -86,9 +115,96 @@ public class GridSystem
             if (!BonusTypeUtilities.ContainsDestroyWholeRowColumn(matchesInfo.BonusesContained))
                 matchesInfo.BonusesContained |= BonusType.DestroyWholeRowColumn;
         }
+        if (ContainsExplosionBonus(verticalMatches))
+        {
+            var explosionMatches = GetExplosionRange(verticalMatches);
+            matchesInfo.AddObjectRange(explosionMatches);
+            if (!BonusTypeUtilities.ContainsExplosion(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Explosion;
+        }
+        if (ContainsColorBomb(verticalMatches))
+        {
+            var colorBombMatches = GetColorBombRange(verticalMatches);
+            matchesInfo.AddObjectRange(colorBombMatches);
+            if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.ColorBomb;
+        }
         matchesInfo.AddObjectRange(verticalMatches);
 
         return matchesInfo;
+    }
+
+    private bool ContainsColorBomb(IEnumerable<GameObject> matches)
+    {
+        if (matches.Count() >= GameConstants.MinimumMatches)
+        {
+            foreach (var go in matches)
+            {
+                if (BonusTypeUtilities.ContainsColorBomb(go.GetComponent<FoodItem>().Bonus))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private IEnumerable<GameObject> GetColorBombRange(IEnumerable<GameObject> matches)
+    {
+        List<GameObject> allMatches = new List<GameObject>();
+        foreach (var go in matches)
+        {
+            if (BonusTypeUtilities.ContainsColorBomb(go.GetComponent<FoodItem>().Bonus))
+            {
+                string type = go.GetComponent<FoodItem>().Type;
+                for (int r = 0; r < GameConstants.Rows; r++)
+                {
+                    for (int c = 0; c < GameConstants.Columns; c++)
+                    {
+                        if (grid[r, c] != null && grid[r, c].GetComponent<FoodItem>().Type == type)
+                        {
+                            allMatches.Add(grid[r, c]);
+                        }
+                    }
+                }
+            }
+        }
+        return allMatches;
+    }
+
+    private bool ContainsExplosionBonus(IEnumerable<GameObject> matches)
+    {
+        if (matches.Count() >= GameConstants.MinimumMatches)
+        {
+            foreach (var go in matches)
+            {
+                if (BonusTypeUtilities.ContainsExplosion(go.GetComponent<FoodItem>().Bonus))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private IEnumerable<GameObject> GetExplosionRange(IEnumerable<GameObject> matches)
+    {
+        List<GameObject> range = new List<GameObject>();
+        foreach (var go in matches)
+        {
+            if (BonusTypeUtilities.ContainsExplosion(go.GetComponent<FoodItem>().Bonus))
+            {
+                int row = go.GetComponent<FoodItem>().Row;
+                int column = go.GetComponent<FoodItem>().Column;
+                for (int r = row - 1; r <= row + 1; r++)
+                {
+                    for (int c = column - 1; c <= column + 1; c++)
+                    {
+                        if (r >= 0 && r < GameConstants.Rows && c >= 0 && c < GameConstants.Columns)
+                        {
+                            if (grid[r, c] != null) range.Add(grid[r, c]);
+                        }
+                    }
+                }
+            }
+        }
+        return range;
     }
 
     private bool ContainsDestroyRowColumnBonus(IEnumerable<GameObject> matches)

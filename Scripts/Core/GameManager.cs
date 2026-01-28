@@ -1,11 +1,13 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
     public GameState CurrentState { get; private set; }
+    public List<PowerupType> SelectedBoosters = new List<PowerupType>();
 
     void Awake()
     {
@@ -23,7 +25,6 @@ public class GameManager : MonoBehaviour
     public void SetState(GameState newState)
     {
         CurrentState = newState;
-        // Trigger events here  fdgdf
     }
 
     public void ReloadScene()

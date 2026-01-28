@@ -2,8 +2,8 @@ using UnityEngine;
 
 public static class GameConstants
 {
-    public static readonly int Rows = 6;
-public static readonly int Columns = 6;
+    public static int Rows = 6;
+    public static int Columns = 6;
 
     public static readonly float AnimationDuration = 0.2f;
 
