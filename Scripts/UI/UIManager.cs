@@ -136,4 +136,25 @@ public class UIManager : MonoBehaviour
     {
         if (LosePanel != null) LosePanel.SetActive(true);
     }
+
+    public void OnQuitButton()
+    {
+        Time.timeScale = 1f; // Reset time before leaving
+        AudioListener.pause = false; // Ensure audio is resumed
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    }
+
+    public void OnWinContinueButton()
+    {
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    }
+
+    public void OnLoseContinueButton()
+    {
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
+    }
 }

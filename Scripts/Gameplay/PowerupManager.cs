@@ -17,6 +17,11 @@ public class PowerupManager : MonoBehaviour
     public BoardManager boardManager;
     public PowerupType currentActivePowerup = PowerupType.None;
 
+    void Awake()
+    {
+        currentActivePowerup = PowerupType.None;
+    }
+
     public void SelectPowerup(string typeName)
     {
         if (boardManager == null)
@@ -58,6 +63,9 @@ public class PowerupManager : MonoBehaviour
     public void TryExecutePowerup(GameObject target)
     {
         if (target == null || !IsPowerupActive()) return;
+
+        // Ensure we only execute on valid FoodItems
+        if (target.GetComponent<FoodItem>() == null) return;
 
         switch (currentActivePowerup)
         {

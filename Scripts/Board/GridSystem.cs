@@ -71,6 +71,71 @@ public class GridSystem
         Swap(backupG1, backupG2);
     }
 
+    public IEnumerable<GameObject> GetBonusArea(GameObject go, GameObject other = null)
+    {
+        List<GameObject> matches = new List<GameObject>();
+        var food = go.GetComponent<FoodItem>();
+        if (food == null) return matches;
+
+        if (BonusTypeUtilities.ContainsExplosion(food.Bonus))
+        {
+             int row = food.Row;
+             int column = food.Column;
+             for (int r = row - 1; r <= row + 1; r++)
+             {
+                 for (int c = column - 1; c <= column + 1; c++)
+                 {
+                     if (r >= 0 && r < GameConstants.Rows && c >= 0 && c < GameConstants.Columns)
+                     {
+                         if (grid[r, c] != null) matches.Add(grid[r, c]);
+                     }
+                 }
+             }
+        }
+        else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(food.Bonus))
+        {
+            // Row
+            for (int c = 0; c < GameConstants.Columns; c++)
+            {
+                if (grid[food.Row, c] != null) matches.Add(grid[food.Row, c]);
+            }
+            // Column
+            for (int r = 0; r < GameConstants.Rows; r++)
+            {
+                if (grid[r, food.Column] != null) matches.Add(grid[r, food.Column]);
+            }
+        }
+        else if (BonusTypeUtilities.ContainsColorBomb(food.Bonus))
+        {
+            // Color Bomb Logic: Destroy all items of the type of 'other'
+            if (other != null)
+            {
+                var otherFood = other.GetComponent<FoodItem>();
+                if (otherFood != null && !string.IsNullOrEmpty(otherFood.Type))
+                {
+                    string targetType = otherFood.Type;
+                    for (int r = 0; r < GameConstants.Rows; r++)
+                    {
+                        for (int c = 0; c < GameConstants.Columns; c++)
+                        {
+                            var item = grid[r, c];
+                            if (item != null)
+                            {
+                                var itemFood = item.GetComponent<FoodItem>();
+                                if (itemFood != null && itemFood.Type == targetType)
+                                {
+                                    matches.Add(item);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return matches;
+    }
+
     public IEnumerable<GameObject> GetMatches(IEnumerable<GameObject> gos)
     {
         List<GameObject> matches = new List<GameObject>();

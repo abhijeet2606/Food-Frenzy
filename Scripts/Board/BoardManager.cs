@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class BoardManager : MonoBehaviour
 {
@@ -47,7 +48,7 @@ public class BoardManager : MonoBehaviour
     private Vector2 firstTouchPosition;
     private Vector2 finalTouchPosition;
     private float swipeAngle = 0;
-    private float swipeResist = 0.5f;
+    private float swipeResist = 0.2f;
 
     private IEnumerator CheckPotentialMatchesCoroutine;
     private IEnumerator AnimatePotentialMatchesCoroutine;
@@ -184,8 +185,40 @@ public class BoardManager : MonoBehaviour
 
         foreach (var item in BonusPrefabs)
         {
-            item.GetComponent<FoodItem>().Type = FoodPrefabs.
-                Where(x => x.GetComponent<FoodItem>().Type.Contains(item.name.Split('_')[1].Trim())).Single().name;
+            // Safer initialization to find the base Food Type
+            if (item.name.Contains("_"))
+            {
+                var parts = item.name.Split('_');
+                // Usually Format: BonusType_FoodType (e.g., Striped_Burger) or FoodType_BonusType
+                // We check if any part matches a known food type
+                
+                string foundType = null;
+                foreach (var part in parts)
+                {
+                    var match = FoodPrefabs.FirstOrDefault(x => x.name.Contains(part.Trim()));
+                    if (match != null)
+                    {
+                        foundType = match.name;
+                        break;
+                    }
+                }
+
+                if (foundType != null)
+                {
+                    item.GetComponent<FoodItem>().Type = foundType;
+                }
+                else
+                {
+                    // Fallback to original logic if simple split
+                    if (parts.Length > 1)
+                    {
+                         try {
+                            item.GetComponent<FoodItem>().Type = FoodPrefabs.
+                                Where(x => x.GetComponent<FoodItem>().Type.Contains(parts[1].Trim())).FirstOrDefault()?.name ?? "";
+                         } catch {}
+                    }
+                }
+            }
         }
     }
 
@@ -195,7 +228,9 @@ public class BoardManager : MonoBehaviour
         AdjustCameraAndBoardPosition();
 
         if (grid != null)
+        {
             DestroyAllFood();
+        }
 
         grid = new GridSystem();
         SpawnPositions = new Vector2[GameConstants.Columns];
@@ -207,18 +242,18 @@ public class BoardManager : MonoBehaviour
                 GameObject newFood = GetRandomFood();
 
                 // Prevent initial matches
-                while (column >= 2 && grid[row, column - 1].GetComponent<FoodItem>()
-                    .IsSameType(newFood.GetComponent<FoodItem>())
-                    && grid[row, column - 2].GetComponent<FoodItem>().IsSameType(newFood.GetComponent<FoodItem>()))
+                int maxIterations = 0;
+                while (maxIterations < 100 &&
+                    ((column >= 2 && grid[row, column - 1].GetComponent<FoodItem>()
+                        .IsSameType(newFood.GetComponent<FoodItem>())
+                        && grid[row, column - 2].GetComponent<FoodItem>().IsSameType(newFood.GetComponent<FoodItem>()))
+                    ||
+                    (row >= 2 && grid[row - 1, column].GetComponent<FoodItem>()
+                        .IsSameType(newFood.GetComponent<FoodItem>())
+                        && grid[row - 2, column].GetComponent<FoodItem>().IsSameType(newFood.GetComponent<FoodItem>()))))
                 {
                     newFood = GetRandomFood();
-                }
-
-                while (row >= 2 && grid[row - 1, column].GetComponent<FoodItem>()
-                    .IsSameType(newFood.GetComponent<FoodItem>())
-                    && grid[row - 2, column].GetComponent<FoodItem>().IsSameType(newFood.GetComponent<FoodItem>()))
-                {
-                    newFood = GetRandomFood();
+                    maxIterations++;
                 }
 
                 InstantiateAndPlaceNewFood(row, column, newFood);
@@ -226,6 +261,75 @@ public class BoardManager : MonoBehaviour
         }
 
         SetupSpawnPositions();
+        
+        // Final pass to ensure no matches exist (Brute Force Fix)
+        ValidateBoard();
+    }
+
+    private void ValidateBoard()
+    {
+        // Simple brute force: iterate through board, if match found, replace with different type
+        bool hasMatch = true;
+        int safety = 0;
+        while (hasMatch && safety < 100)
+        {
+            hasMatch = false;
+            for (int row = 0; row < GameConstants.Rows; row++)
+            {
+                for (int col = 0; col < GameConstants.Columns; col++)
+                {
+                    var current = grid[row, col];
+                    if (current == null) continue;
+                    var currentFood = current.GetComponent<FoodItem>();
+
+                    // Check Horizontal
+                    if (col >= 2)
+                    {
+                        var p1 = grid[row, col - 1].GetComponent<FoodItem>();
+                        var p2 = grid[row, col - 2].GetComponent<FoodItem>();
+                        if (currentFood.IsSameType(p1) && currentFood.IsSameType(p2))
+                        {
+                            ReplaceWithRandomDifferent(current, row, col);
+                            hasMatch = true;
+                        }
+                    }
+                    
+                    // Check Vertical
+                    if (row >= 2)
+                    {
+                        var p1 = grid[row - 1, col].GetComponent<FoodItem>();
+                        var p2 = grid[row - 2, col].GetComponent<FoodItem>();
+                        if (currentFood.IsSameType(p1) && currentFood.IsSameType(p2))
+                        {
+                            ReplaceWithRandomDifferent(current, row, col);
+                            hasMatch = true;
+                        }
+                    }
+                }
+            }
+            safety++;
+        }
+    }
+
+    private void ReplaceWithRandomDifferent(GameObject currentGo, int row, int col)
+    {
+        if (currentGo == null) return;
+        var currentFood = currentGo.GetComponent<FoodItem>();
+        string oldType = currentFood.Type;
+        GameObject newPrefab = GetRandomFood();
+        int iterations = 0;
+        while (newPrefab.GetComponent<FoodItem>().Type == oldType && iterations < 50)
+        {
+            newPrefab = GetRandomFood();
+            iterations++;
+        }
+        
+        // Remove old
+        grid.Remove(currentGo);
+        Destroy(currentGo);
+
+        // Add new
+        InstantiateAndPlaceNewFood(row, col, newPrefab);
     }
 
     private void InitializeVariables()
@@ -278,22 +382,14 @@ public class BoardManager : MonoBehaviour
             BoardCenterOffset.y - (boardHeight / 2f) + (CandySize.y / 2f)
         );
 
-        // Adjust Camera Size
+        // We DO NOT change Camera Size here anymore, to preserve UI layout
+        // Just center the camera horizontally if needed
         if (Camera.main != null)
         {
-            // Vertical Fit: Board Height + Padding (Top/Bottom UI space)
-            float verticalSize = (boardHeight / 2f) + 3.0f;
-
-            // Horizontal Fit: Board Width + Padding
-            float aspect = Camera.main.aspect;
-            float horizontalSize = ((boardWidth / 2f) + 1.0f) / aspect;
-
-            Camera.main.orthographicSize = Mathf.Max(verticalSize, horizontalSize);
-            
-            // Center Camera on X axis
-            Vector3 camPos = Camera.main.transform.position;
-            camPos.x = BoardCenterOffset.x;
-            Camera.main.transform.position = camPos;
+             // Optional: Only center X position, keep Y and Size fixed as set in Scene
+             Vector3 camPos = Camera.main.transform.position;
+             camPos.x = BoardCenterOffset.x;
+             Camera.main.transform.position = camPos;
         }
     }
 
@@ -308,8 +404,14 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    [Header("Input Settings")]
+    public bool EnableUIBlocking = false; // Set to false to debug swipe issues
+
     void Update()
     {
+        // Prevent interaction if clicking on UI (Optional)
+        if (EnableUIBlocking && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
         if (state == GameState.None)
         {
             // Check powerup first
@@ -331,6 +433,11 @@ public class BoardManager : MonoBehaviour
                     hitGo = hit.collider.gameObject;
                     firstTouchPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                     state = GameState.SelectionStarted;
+                    // Debug.Log("Selection Started on " + hitGo.name);
+                }
+                else
+                {
+                    // Debug.Log("Click hit nothing or no FoodItem. Check Colliders!");
                 }
             }
         }
@@ -431,7 +538,39 @@ public class BoardManager : MonoBehaviour
         var totalMatches = hitGomatchesInfo.MatchedFood
             .Union(hitGo2matchesInfo.MatchedFood).Distinct().ToList();
 
-        if (totalMatches.Count < GameConstants.MinimumMatches)
+        // Check for Bonus Activation on Swap (even if no match-3)
+        bool bonusTriggered = false;
+        
+        // 1. Check if hitGo is a Bonus
+        var f1 = hitGo.GetComponent<FoodItem>();
+        if (f1 != null && f1.Bonus != BonusType.None)
+        {
+            var bonusMatches = grid.GetBonusArea(hitGo, hitGo2);
+            if (bonusMatches.Count() > 0)
+            {
+                totalMatches.AddRange(bonusMatches);
+                totalMatches.Add(hitGo); // Ensure bonus itself is destroyed
+                bonusTriggered = true;
+            }
+        }
+
+        // 2. Check if hitGo2 is a Bonus
+        var f2 = hitGo2.GetComponent<FoodItem>();
+        if (f2 != null && f2.Bonus != BonusType.None)
+        {
+            var bonusMatches = grid.GetBonusArea(hitGo2, hitGo);
+            if (bonusMatches.Count() > 0)
+            {
+                totalMatches.AddRange(bonusMatches);
+                totalMatches.Add(hitGo2); // Ensure bonus itself is destroyed
+                bonusTriggered = true;
+            }
+        }
+        
+        // Deduplicate
+        totalMatches = totalMatches.Distinct().ToList();
+
+        if (totalMatches.Count < GameConstants.MinimumMatches && !bonusTriggered)
         {
             hitGo.transform.DOMove(hitGo2Pos, GameConstants.AnimationDuration);
             hitGo2.transform.DOMove(hitGoPos, GameConstants.AnimationDuration);
@@ -530,10 +669,11 @@ public class BoardManager : MonoBehaviour
                 // Advance to next level logic
                 int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
                 PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
+                PlayerPrefs.Save(); // Ensure data is written
                 Debug.Log($"Level {currentLevel} complete! advancing to Level {currentLevel + 1}");
                 
-                // Wait a moment then reload (or wait for UI input if we had a next button)
-                StartCoroutine(WaitAndReloadScene());
+                // NO auto-reload anymore. Wait for UI "Continue" button.
+                // StartCoroutine(WaitAndReloadScene());
                 
                 yield break;
             }
@@ -575,7 +715,7 @@ public class BoardManager : MonoBehaviour
 
     private void CreateBonus(FoodItem hitGoCache, BonusType bonusType)
     {
-        GameObject bonusPrefab = GetBonusFromType(hitGoCache.Type);
+        GameObject bonusPrefab = GetBonusFromType(hitGoCache.Type, bonusType);
         if (bonusPrefab == null) return;
 
         GameObject Bonus = Instantiate(bonusPrefab, BottomRight
@@ -583,7 +723,14 @@ public class BoardManager : MonoBehaviour
                 hitGoCache.Row * CandySize.y), Quaternion.identity)
             as GameObject;
         grid[hitGoCache.Row, hitGoCache.Column] = Bonus;
+        
         var BonusShape = Bonus.GetComponent<FoodItem>();
+        if (BonusShape == null)
+        {
+            Debug.LogError($"Bonus prefab '{bonusPrefab.name}' is missing the 'FoodItem' script! Auto-adding it, but please fix the prefab.");
+            BonusShape = Bonus.AddComponent<FoodItem>();
+        }
+        
         BonusShape.Assign(hitGoCache.Type, hitGoCache.Row, hitGoCache.Column);
         BonusShape.Bonus |= bonusType;
     }
@@ -663,13 +810,71 @@ public class BoardManager : MonoBehaviour
         return ExplosionPrefabs[Random.Range(0, ExplosionPrefabs.Length)];
     }
 
-    private GameObject GetBonusFromType(string type)
+    private GameObject GetBonusFromType(string type, BonusType bonusType)
     {
-        if (string.IsNullOrEmpty(type))
+        if (string.IsNullOrEmpty(type)) return null;
+
+        // 1. Color Bomb Check (5 in a straight line)
+        if (BonusTypeUtilities.ContainsColorBomb(bonusType))
         {
-            return null;
+            foreach (var item in BonusPrefabs)
+            {
+                if (item.name.IndexOf("ColorBomb", System.StringComparison.OrdinalIgnoreCase) >= 0 || 
+                    item.name.IndexOf("Rainbow", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    item.name.IndexOf("Oven", System.StringComparison.OrdinalIgnoreCase) >= 0) // Oven is now Color Bomb
+                    return item;
+            }
         }
 
+        string typeLower = type.ToLower();
+
+        // 2. Specific Bonus Type Check (Type + Bonus Name)
+        foreach (var item in BonusPrefabs)
+        {
+            var foodItem = item.GetComponent<FoodItem>();
+            if (foodItem != null && !string.IsNullOrEmpty(foodItem.Type) && type.Contains(foodItem.Type))
+            {
+                string nameLower = item.name.ToLower();
+
+                if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(bonusType))
+                {
+                    if (nameLower.Contains("striped") || nameLower.Contains("row") || 
+                        nameLower.Contains("column") || nameLower.Contains("horizontal") || 
+                        nameLower.Contains("vertical") || nameLower.Contains("knife") || nameLower.Contains("blender"))
+                        return item;
+                }
+                else if (BonusTypeUtilities.ContainsExplosion(bonusType))
+                {
+                    if (nameLower.Contains("explosion") || nameLower.Contains("package") || 
+                        nameLower.Contains("wrapped") || nameLower.Contains("bomb") || 
+                        nameLower.Contains("pan")) // Pan is Explosion
+                        return item;
+                }
+            }
+        }
+
+        // 3. Generic Bonus Type Check (Bonus Name Only - Shared Prefab)
+        foreach (var item in BonusPrefabs)
+        {
+            string nameLower = item.name.ToLower();
+
+            if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(bonusType))
+            {
+                if (nameLower.Contains("striped") || nameLower.Contains("row") || 
+                    nameLower.Contains("column") || nameLower.Contains("horizontal") || 
+                    nameLower.Contains("vertical") || nameLower.Contains("knife") || nameLower.Contains("blender"))
+                    return item;
+            }
+            else if (BonusTypeUtilities.ContainsExplosion(bonusType))
+            {
+                if (nameLower.Contains("explosion") || nameLower.Contains("package") || 
+                    nameLower.Contains("wrapped") || nameLower.Contains("bomb") || 
+                    nameLower.Contains("pan")) // Pan is Explosion
+                    return item;
+            }
+        }
+
+        // 4. Fallback: Return any matching food type if specific variant not found
         foreach (var item in BonusPrefabs)
         {
             if (item.GetComponent<FoodItem>().Type.Contains(type))
