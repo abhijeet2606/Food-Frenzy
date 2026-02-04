@@ -38,7 +38,12 @@ public class GridSystem
         
         if (hCount >= 5 || vCount >= 5) return BonusType.ColorBomb;
         if (hCount >= 3 && vCount >= 3) return BonusType.Explosion; // T or L shape
-        if (hCount == 4 || vCount == 4) return BonusType.DestroyWholeRowColumn;
+        
+        // Horizontal Match -> Vertical Knife (Destroy Column)
+        if (hCount == 4) return BonusType.DestroyWholeColumn;
+        
+        // Vertical Match -> Horizontal Knife (Destroy Row)
+        if (vCount == 4) return BonusType.DestroyWholeRow;
         
         return BonusType.None;
     }
@@ -91,6 +96,22 @@ public class GridSystem
                      }
                  }
              }
+        }
+        else if (BonusTypeUtilities.ContainsDestroyWholeRow(food.Bonus))
+        {
+            // Row
+            for (int c = 0; c < GameConstants.Columns; c++)
+            {
+                if (grid[food.Row, c] != null) matches.Add(grid[food.Row, c]);
+            }
+        }
+        else if (BonusTypeUtilities.ContainsDestroyWholeColumn(food.Bonus))
+        {
+            // Column
+            for (int r = 0; r < GameConstants.Rows; r++)
+            {
+                if (grid[r, food.Column] != null) matches.Add(grid[r, food.Column]);
+            }
         }
         else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(food.Bonus))
         {
