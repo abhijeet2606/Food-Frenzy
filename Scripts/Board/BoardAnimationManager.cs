@@ -18,7 +18,7 @@ public class BoardAnimationManager : MonoBehaviour
     public float regularFadeDuration = 0.2f;
     public float regularScaleDuration = 0.2f;
 
-    // Powerup destruction settings
+    // Powerup destruction setting
     public float powerupPopupScale = 1.25f;
     public float powerupPopupDuration = 0.2f;
     public float powerupVanishDuration = 0.26f;
