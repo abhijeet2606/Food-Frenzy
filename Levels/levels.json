@@ -114,6 +114,473 @@
         { "type": "Onion", "count": 15 },
         { "type": "Lettuce", "count": 15 }
       ]
+    },
+    {
+      "levelId": 11,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 12,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 13,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 14,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 15,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 16,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 15 },
+        { "type": "Tomato", "count": 15 },
+        { "type": "Chesse", "count": 15 }
+      ]
+    },
+    {
+      "levelId": 17,
+      "rows": 6,
+      "columns": 6,
+      "moves": 17,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 15 },
+        { "type": "Lettuce", "count": 15 },
+        { "type": "Burger", "count": 15 }
+      ]
+    },
+    {
+      "levelId": 18,
+      "rows": 6,
+      "columns": 6,
+      "moves": 17,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 15 },
+        { "type": "Chesse", "count": 15 },
+        { "type": "Onion", "count": 15 }
+      ]
+    },
+    {
+      "levelId": 19,
+      "rows": 6,
+      "columns": 6,
+      "moves": 16,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 15 },
+        { "type": "Burger", "count": 15 },
+        { "type": "Tomato", "count": 15 }
+      ]
+    },
+    {
+      "levelId": 20,
+      "rows": 6,
+      "columns": 6,
+      "moves": 16,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 15 },
+        { "type": "Onion", "count": 15 },
+        { "type": "Lettuce", "count": 15 }
+      ]
+    },
+    {
+      "levelId": 21,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 30 },
+        { "type": "Tomato", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 22,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 30 },
+        { "type": "Onion", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 23,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 30 },
+        { "type": "Burger", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 24,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 30 },
+        { "type": "Chesse", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 25,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 30 },
+        { "type": "Lettuce", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 26,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 27,
+      "rows": 6,
+      "columns": 6,
+      "moves": 17,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 28,
+      "rows": 6,
+      "columns": 6,
+      "moves": 17,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 29,
+      "rows": 6,
+      "columns": 6,
+      "moves": 16,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 30,
+      "rows": 6,
+      "columns": 6,
+      "moves": 16,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 31,
+      "rows": 6,
+      "columns": 6,
+      "moves": 22,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 40 }
+      ]
+    },
+    {
+      "levelId": 32,
+      "rows": 6,
+      "columns": 6,
+      "moves": 22,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 40 }
+      ]
+    },
+    {
+      "levelId": 33,
+      "rows": 6,
+      "columns": 6,
+      "moves": 21,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 40 }
+      ]
+    },
+    {
+      "levelId": 34,
+      "rows": 6,
+      "columns": 6,
+      "moves": 21,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 40 }
+      ]
+    },
+    {
+      "levelId": 35,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 40 }
+      ]
+    },
+    {
+      "levelId": 36,
+      "rows": 6,
+      "columns": 6,
+      "moves": 20,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 25 },
+        { "type": "Tomato", "count": 25 },
+        { "type": "Chesse", "count": 25 }
+      ]
+    },
+    {
+      "levelId": 37,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 25 },
+        { "type": "Lettuce", "count": 25 },
+        { "type": "Burger", "count": 25 }
+      ]
+    },
+    {
+      "levelId": 38,
+      "rows": 6,
+      "columns": 6,
+      "moves": 19,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 25 },
+        { "type": "Chesse", "count": 25 },
+        { "type": "Onion", "count": 25 }
+      ]
+    },
+    {
+      "levelId": 39,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 25 },
+        { "type": "Burger", "count": 25 },
+        { "type": "Tomato", "count": 25 }
+      ]
+    },
+    {
+      "levelId": 40,
+      "rows": 6,
+      "columns": 6,
+      "moves": 18,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 25 },
+        { "type": "Onion", "count": 25 },
+        { "type": "Lettuce", "count": 25 }
+      ]
+    },
+    {
+      "levelId": 41,
+      "rows": 6,
+      "columns": 6,
+      "moves": 25,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 42,
+      "rows": 6,
+      "columns": 6,
+      "moves": 25,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 43,
+      "rows": 6,
+      "columns": 6,
+      "moves": 24,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Chesse", "count": 20 },
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 44,
+      "rows": 6,
+      "columns": 6,
+      "moves": 24,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 20 },
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 45,
+      "rows": 6,
+      "columns": 6,
+      "moves": 23,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 20 },
+        { "type": "Burger", "count": 20 },
+        { "type": "Tomato", "count": 20 },
+        { "type": "Chesse", "count": 20 }
+      ]
+    },
+    {
+      "levelId": 46,
+      "rows": 6,
+      "columns": 6,
+      "moves": 25,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 30 },
+        { "type": "Tomato", "count": 30 },
+        { "type": "Chesse", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 47,
+      "rows": 6,
+      "columns": 6,
+      "moves": 25,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Onion", "count": 30 },
+        { "type": "Lettuce", "count": 30 },
+        { "type": "Burger", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 48,
+      "rows": 6,
+      "columns": 6,
+      "moves": 24,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Tomato", "count": 30 },
+        { "type": "Chesse", "count": 30 },
+        { "type": "Onion", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 49,
+      "rows": 6,
+      "columns": 6,
+      "moves": 24,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Lettuce", "count": 30 },
+        { "type": "Burger", "count": 30 },
+        { "type": "Tomato", "count": 30 }
+      ]
+    },
+    {
+      "levelId": 50,
+      "rows": 6,
+      "columns": 6,
+      "moves": 30,
+      "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
+      "goals": [
+        { "type": "Burger", "count": 25 },
+        { "type": "Tomato", "count": 25 },
+        { "type": "Chesse", "count": 25 },
+        { "type": "Onion", "count": 25 },
+        { "type": "Lettuce", "count": 25 }
+      ]
     }
   ]
 }

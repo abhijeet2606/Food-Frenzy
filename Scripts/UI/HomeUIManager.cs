@@ -6,9 +6,15 @@ public class HomeUIManager : MonoBehaviour
 {
     public Text LevelText, LevelText2;
 
+    // Track selected boosters
+    private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
+
     private void Start()
     {
         UpdateLevelUI();
+        // Reset booster selection on start
+        selectedBoosters.Clear();
+        PlayerPrefs.DeleteKey("SelectedBoosters");
     }
 
     private void UpdateLevelUI()
@@ -24,8 +30,35 @@ public class HomeUIManager : MonoBehaviour
         }
     }
 
+    // Called by UI Buttons (Oven, Hat, Knife)
+    public void SelectBooster(string boosterName)
+    {
+        if (selectedBoosters.Contains(boosterName))
+        {
+            // Deselect if already selected
+            selectedBoosters.Remove(boosterName);
+            Debug.Log("Booster Deselected: " + boosterName);
+        }
+        else
+        {
+            selectedBoosters.Add(boosterName);
+            Debug.Log("Booster Selected: " + boosterName);
+        }
+    }
+
     public void OnPlayButton()
     {
+        // Save selected boosters for the Gameplay scene
+        if (selectedBoosters.Count > 0)
+        {
+            string joinedBoosters = string.Join(",", selectedBoosters);
+            PlayerPrefs.SetString("SelectedBoosters", joinedBoosters);
+        }
+        else
+        {
+            PlayerPrefs.DeleteKey("SelectedBoosters");
+        }
+
         // Start from Level 1 (or saved level later)
         if (!PlayerPrefs.HasKey("CurrentLevel"))
         {

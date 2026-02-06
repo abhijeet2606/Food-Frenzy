@@ -273,6 +273,168 @@ public class BoardManager : MonoBehaviour
         
         // Final pass to ensure no matches exist (Brute Force Fix)
         ValidateBoard();
+
+        // Spawn Pre-Game Booster if selected
+        SpawnPreGameBooster();
+    }
+
+    private void SpawnPreGameBooster()
+    {
+        string boostersString = PlayerPrefs.GetString("SelectedBoosters", "");
+        
+        // Backward compatibility for single selection
+        if (string.IsNullOrEmpty(boostersString) && PlayerPrefs.HasKey("SelectedBooster"))
+        {
+            boostersString = PlayerPrefs.GetString("SelectedBooster", "");
+        }
+        
+        if (string.IsNullOrEmpty(boostersString)) return;
+
+        string[] boosters = boostersString.Split(',');
+        
+        foreach (var boosterName in boosters)
+        {
+            if (string.IsNullOrEmpty(boosterName)) continue;
+            
+            Debug.Log($"Attempting to spawn Pre-Game Booster: {boosterName}");
+            SpawnSingleBooster(boosterName);
+        }
+    }
+
+    private void SpawnSingleBooster(string boosterName)
+    {
+        GameObject prefabToSpawn = null;
+        
+        // 1. Try to find exact match in BonusPrefabs
+        if (BonusPrefabs != null)
+        {
+            foreach (var prefab in BonusPrefabs)
+            {
+                if (prefab.name.IndexOf(boosterName, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    prefabToSpawn = prefab;
+                    break;
+                }
+            }
+        }
+        
+        // 2. Fallback Mapping if not found
+        if (prefabToSpawn == null && BonusPrefabs != null)
+        {
+            if (boosterName.Equals("Oven", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Oven -> ColorBomb or Explosion
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("ColorBomb") || p.name.Contains("Rainbow") || p.name.Contains("Oven"));
+            }
+            else if (boosterName.Equals("Hat", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Hat -> Magic/Special
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Hat") || p.name.Contains("Magic"));
+            }
+            else if (boosterName.Equals("Knife", System.StringComparison.OrdinalIgnoreCase))
+            {
+                 // Knife -> Striped/Line
+                 prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Striped") || p.name.Contains("Line") || p.name.Contains("Knife"));
+            }
+            else if (boosterName.Equals("Pan", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Pan -> Explosion/Wrapped
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Explosion") || p.name.Contains("Wrapped") || p.name.Contains("Pan"));
+            }
+        }
+
+        if (prefabToSpawn != null)
+        {
+            // Spawn at random location
+            int randRow = Random.Range(0, GameConstants.Rows);
+            int randCol = Random.Range(0, GameConstants.Columns);
+            
+            GameObject oldItem = grid[randRow, randCol];
+            if (oldItem != null)
+            {
+                // Remove from grid immediately to avoid race conditions
+                grid.Remove(oldItem); 
+                Destroy(oldItem);
+            }
+            
+            GameObject newBonus = Instantiate(prefabToSpawn, BottomRight + new Vector2(randCol * CandySize.x, randRow * CandySize.y), Quaternion.identity);
+            
+            // IMMEDIATE GRID UPDATE to prevent MissingReferenceException in other scripts
+            grid[randRow, randCol] = newBonus;
+            
+            // Fix FoodItem component
+            var foodItem = newBonus.GetComponent<FoodItem>();
+            if (foodItem == null) foodItem = newBonus.AddComponent<FoodItem>();
+            
+            // Assign properties with SAFETY checks
+            string type = foodItem.Type; 
+            
+            // Try to get type from prefab component if current is empty
+            if (string.IsNullOrEmpty(type))
+            {
+                var prefabFood = prefabToSpawn.GetComponent<FoodItem>();
+                if (prefabFood != null) type = prefabFood.Type;
+            }
+            
+            // Fallback: Use prefab name, ensuring it's NEVER null
+            if (string.IsNullOrEmpty(type))
+            {
+                type = prefabToSpawn.name ?? "Bonus_Unknown";
+            }
+            
+            // Final safety net for Assign
+            try 
+            {
+                foodItem.Assign(type, randRow, randCol);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Error assigning FoodItem for {boosterName}: {ex.Message}. Type was: '{type}'");
+                // Attempt recovery assignment with guaranteed non-null string
+                foodItem.Assign("Recovery_" + boosterName, randRow, randCol);
+            }
+            
+            // Ensure BonusType is set
+            if (foodItem.Bonus == BonusType.None)
+            {
+                 var prefabFood = prefabToSpawn.GetComponent<FoodItem>();
+                 if (prefabFood != null) foodItem.Bonus = prefabFood.Bonus;
+                 
+                 // Fallback inference
+                 if (foodItem.Bonus == BonusType.None)
+                 {
+                     if (prefabToSpawn.name.Contains("ColorBomb") || prefabToSpawn.name.Contains("Oven")) 
+                        foodItem.Bonus = BonusType.ColorBomb;
+                     else if (prefabToSpawn.name.Contains("Explosion") || prefabToSpawn.name.Contains("Pan")) 
+                        foodItem.Bonus = BonusType.Explosion;
+                     else if (prefabToSpawn.name.Contains("Striped") || prefabToSpawn.name.Contains("Line") || prefabToSpawn.name.Contains("Knife"))
+                     {
+                         // Check name for direction
+                         if (prefabToSpawn.name.IndexOf("Vertical", System.StringComparison.OrdinalIgnoreCase) >= 0 || 
+                             prefabToSpawn.name.IndexOf("Column", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                         {
+                             foodItem.Bonus = BonusType.DestroyWholeColumn;
+                         }
+                         else if (prefabToSpawn.name.IndexOf("Horizontal", System.StringComparison.OrdinalIgnoreCase) >= 0 || 
+                                  prefabToSpawn.name.IndexOf("Row", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                         {
+                             foodItem.Bonus = BonusType.DestroyWholeRow;
+                         }
+                         else
+                         {
+                             // Randomly assign if not specified
+                             foodItem.Bonus = (Random.value > 0.5f) ? BonusType.DestroyWholeRow : BonusType.DestroyWholeColumn;
+                         }
+                     }
+                 }
+            }
+
+            Debug.Log($"Spawned {boosterName} at [{randRow},{randCol}] with Type: {type}");
+        }
+        else
+        {
+            Debug.LogWarning($"Could not find prefab for booster: {boosterName}");
+        }
     }
 
     private void ValidateBoard()
