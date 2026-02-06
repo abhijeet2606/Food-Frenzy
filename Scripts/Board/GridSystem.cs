@@ -32,9 +32,11 @@ public class GridSystem
     {
         var h = GetMatchesHorizontally(go);
         var v = GetMatchesVertically(go);
+        var s = GetMatchesSquare(go);
         
         int hCount = h.Count();
         int vCount = v.Count();
+        int sCount = s.Count();
         
         if (hCount >= 5 || vCount >= 5) return BonusType.ColorBomb;
         if (hCount >= 3 && vCount >= 3) return BonusType.Explosion; // T or L shape
@@ -44,6 +46,9 @@ public class GridSystem
         
         // Vertical Match -> Horizontal Knife (Destroy Row)
         if (vCount == 4) return BonusType.DestroyWholeRow;
+        
+        // Square Match -> Flies
+        if (sCount >= 4) return BonusType.Flies;
         
         return BonusType.None;
     }
@@ -192,6 +197,11 @@ public class GridSystem
             if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
                 matchesInfo.BonusesContained |= BonusType.ColorBomb;
         }
+        if (ContainsFlies(horizontalMatches))
+        {
+             if (!BonusTypeUtilities.ContainsFlies(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Flies;
+        }
         matchesInfo.AddObjectRange(horizontalMatches);
 
         var verticalMatches = GetMatchesVertically(go);
@@ -215,6 +225,11 @@ public class GridSystem
             if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
                 matchesInfo.BonusesContained |= BonusType.ColorBomb;
         }
+        if (ContainsFlies(verticalMatches))
+        {
+             if (!BonusTypeUtilities.ContainsFlies(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Flies;
+        }
         matchesInfo.AddObjectRange(verticalMatches);
 
         var squareMatches = GetMatchesSquare(go);
@@ -237,9 +252,27 @@ public class GridSystem
             if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
                 matchesInfo.BonusesContained |= BonusType.ColorBomb;
         }
+        if (ContainsFlies(squareMatches))
+        {
+            if (!BonusTypeUtilities.ContainsFlies(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Flies;
+        }
         matchesInfo.AddObjectRange(squareMatches);
 
         return matchesInfo;
+    }
+
+    private bool ContainsFlies(IEnumerable<GameObject> matches)
+    {
+        if (matches.Count() >= GameConstants.MinimumMatches)
+        {
+            foreach (var go in matches)
+            {
+                if (BonusTypeUtilities.ContainsFlies(go.GetComponent<FoodItem>().Bonus))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private bool ContainsColorBomb(IEnumerable<GameObject> matches)

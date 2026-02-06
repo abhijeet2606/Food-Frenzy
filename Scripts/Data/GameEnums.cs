@@ -11,7 +11,8 @@ public enum BonusType
     Explosion = 1 << 1,
     ColorBomb = 1 << 2,
     DestroyWholeRow = 1 << 3,
-    DestroyWholeColumn = 1 << 4
+    DestroyWholeColumn = 1 << 4,
+    Flies = 1 << 5
 }
 
 public static class BonusTypeUtilities
@@ -19,6 +20,11 @@ public static class BonusTypeUtilities
     /// <summary>
     /// Helper method to check for specific bonus type
     /// </summary>
+    public static bool ContainsFlies(BonusType bt)
+    {
+        return (bt & BonusType.Flies) == BonusType.Flies;
+    }
+
     public static bool ContainsDestroyWholeRowColumn(BonusType bt)
     {
         return (bt & BonusType.DestroyWholeRowColumn) == BonusType.DestroyWholeRowColumn ||

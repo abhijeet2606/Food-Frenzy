@@ -693,6 +693,13 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator ActivateBonusRoutine(GameObject item, GameObject targetForColorBomb = null)
     {
+        // Special handling for Flies
+        if (BonusTypeUtilities.ContainsFlies(item.GetComponent<FoodItem>().Bonus))
+        {
+            StartCoroutine(ActivateFliesRoutine(item));
+            yield break;
+        }
+
         var bonusMatches = grid.GetBonusArea(item, targetForColorBomb).ToList();
         bonusMatches.Add(item);
         var totalMatches = bonusMatches.Distinct().ToList();
@@ -774,6 +781,124 @@ public class BoardManager : MonoBehaviour
             state = GameState.None;
             StartCheckForPotentialMatches();
         }
+    }
+
+    private IEnumerator ActivateFliesRoutine(GameObject item)
+    {
+        IncreaseScore(GameConstants.Match3Score);
+        if (soundManager != null) soundManager.PlayCrincle();
+
+        GameObject target = GetFlyTarget(new List<GameObject> { item });
+        
+        List<GameObject> itemsToDestroy = new List<GameObject> { item };
+        if (target != null)
+        {
+            var sr = item.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sortingOrder = 1000;
+            
+            Vector2 targetPos = target.transform.position;
+            float duration = 0.5f;
+            
+            item.transform.DOMove(targetPos, duration).SetEase(Ease.InBack);
+            yield return new WaitForSeconds(duration);
+            
+            itemsToDestroy.Add(target);
+        }
+        
+        float waveDuration = ApplyWaveDestruction(itemsToDestroy);
+        if (waveDuration > 0f) yield return new WaitForSeconds(waveDuration + 0.3f);
+        
+        var columns = itemsToDestroy.Select(go => go.GetComponent<FoodItem>().Column).Distinct().ToList();
+
+        foreach (var m in itemsToDestroy)
+        {
+            if (levelGoals != null)
+            {
+                var shape = m.GetComponent<FoodItem>();
+                foreach (var goal in levelGoals)
+                {
+                    if (shape.Type.Contains(goal.TargetPrefabName))
+                    {
+                        goal.AmountCollected++;
+                        if (uiManager != null) uiManager.UpdateGoalUI(goal);
+                    }
+                }
+            }
+        }
+        
+        if (CheckWinCondition())
+        {
+            isGameOver = true;
+            if (uiManager != null) uiManager.ShowWin();
+            state = GameState.Win;
+            int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+            PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
+            PlayerPrefs.Save();
+            yield break;
+        }
+
+        var collapsedCandyInfo = grid.Collapse(columns);
+        var newCandyInfo = CreateNewCandyInSpecificColumns(columns);
+        int maxDistance = Mathf.Max(collapsedCandyInfo.MaxDistance, newCandyInfo.MaxDistance);
+
+        MoveAndAnimate(newCandyInfo.AlteredFood, maxDistance);
+        MoveAndAnimate(collapsedCandyInfo.AlteredFood, maxDistance);
+
+        yield return new WaitForSeconds(GameConstants.MoveAnimationMinDuration * maxDistance);
+        
+        var chainedMatches = grid.GetMatches(collapsedCandyInfo.AlteredFood)
+                         .Union(grid.GetMatches(newCandyInfo.AlteredFood)).Distinct().ToList();
+        
+        if (chainedMatches.Count > 0)
+        {
+            yield return StartCoroutine(ProcessMatchesChain(chainedMatches));
+        }
+        else
+        {
+            state = GameState.None;
+            StartCheckForPotentialMatches();
+        }
+    }
+
+    private GameObject GetFlyTarget(IEnumerable<GameObject> excluded)
+    {
+        if (levelGoals != null)
+        {
+            var targetGoals = levelGoals.Where(g => !g.IsComplete()).ToList();
+            foreach (var goal in targetGoals)
+            {
+                for (int r = 0; r < GameConstants.Rows; r++)
+                {
+                    for (int c = 0; c < GameConstants.Columns; c++)
+                    {
+                        var go = grid[r, c];
+                        if (go != null && !excluded.Contains(go))
+                        {
+                            if (go.GetComponent<FoodItem>().Type.Contains(goal.TargetPrefabName))
+                                return go;
+                        }
+                    }
+                }
+            }
+        }
+        
+        List<GameObject> candidates = new List<GameObject>();
+        for (int r = 0; r < GameConstants.Rows; r++)
+        {
+            for (int c = 0; c < GameConstants.Columns; c++)
+            {
+                var go = grid[r, c];
+                if (go != null && !excluded.Contains(go) && go.GetComponent<FoodItem>().Bonus == BonusType.None)
+                {
+                    candidates.Add(go);
+                }
+            }
+        }
+        
+        if (candidates.Count > 0)
+            return candidates[Random.Range(0, candidates.Count)];
+            
+        return null;
     }
 
     private IEnumerator ProcessMatchesChain(List<GameObject> matches)
@@ -992,6 +1117,11 @@ public class BoardManager : MonoBehaviour
             bonusToCreate = BonusType.Explosion;
             hitGoCache = (b1 == BonusType.Explosion) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
         }
+        else if (b1 == BonusType.Flies || b2 == BonusType.Flies)
+        {
+            bonusToCreate = BonusType.Flies;
+            hitGoCache = (b1 == BonusType.Flies) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
+        }
         else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(b1) || BonusTypeUtilities.ContainsDestroyWholeRowColumn(b2))
         {
             if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(b1))
@@ -1009,7 +1139,9 @@ public class BoardManager : MonoBehaviour
         if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGomatchesInfo.BonusesContained) ||
             BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGo2matchesInfo.BonusesContained) ||
             BonusTypeUtilities.ContainsExplosion(hitGomatchesInfo.BonusesContained) ||
-            BonusTypeUtilities.ContainsExplosion(hitGo2matchesInfo.BonusesContained))
+            BonusTypeUtilities.ContainsExplosion(hitGo2matchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsFlies(hitGomatchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsFlies(hitGo2matchesInfo.BonusesContained))
         {
             bonusToCreate = BonusType.None;
         }
@@ -1044,6 +1176,37 @@ public class BoardManager : MonoBehaviour
                         }
                     }
                 }
+            }
+
+            // Flies Activation Logic
+            List<GameObject> fliesTargets = new List<GameObject>();
+            foreach (var item in totalMatches)
+            {
+                 if (BonusTypeUtilities.ContainsFlies(item.GetComponent<FoodItem>().Bonus))
+                 {
+                      var target = GetFlyTarget(totalMatches.Union(fliesTargets));
+                      if (target != null)
+                       {
+                            fliesTargets.Add(target);
+                            // Visual: Spawn a flying sprite
+                            GameObject flyer = new GameObject("FlyEffect");
+                            flyer.transform.position = item.transform.position;
+                            var sr = flyer.AddComponent<SpriteRenderer>();
+                            sr.sprite = item.GetComponent<SpriteRenderer>().sprite;
+                            sr.sortingOrder = 1000;
+                            
+                            flyer.transform.DOMove(target.transform.position, 0.5f).SetEase(Ease.InBack).OnComplete(() => {
+                                Destroy(flyer);
+                            });
+                       }
+                 }
+            }
+            if (fliesTargets.Count > 0)
+            {
+                totalMatches.AddRange(fliesTargets);
+                totalMatches = totalMatches.Distinct().ToList();
+                // Recalculate columns for collapse
+                columns = totalMatches.Select(go => go.GetComponent<FoodItem>().Column).Distinct().ToList();
             }
 
             float waveDuration = ApplyWaveDestruction(totalMatches, bonusSource);
@@ -1228,6 +1391,13 @@ public class BoardManager : MonoBehaviour
                         nameLower.Contains("pan")) // Pan is Explosion
                         return item;
                 }
+                else if (BonusTypeUtilities.ContainsFlies(bonusType))
+                {
+                     if (nameLower.Contains("flies") || nameLower.Contains("propeller") || 
+                         nameLower.Contains("bird") || nameLower.Contains("rocket") || 
+                         nameLower.Contains("plane"))
+                        return item;
+                }
             }
         }
 
@@ -1256,6 +1426,13 @@ public class BoardManager : MonoBehaviour
                 if (nameLower.Contains("explosion") || nameLower.Contains("package") || 
                     nameLower.Contains("wrapped") || nameLower.Contains("bomb") || 
                     nameLower.Contains("pan")) // Pan is Explosion
+                    return item;
+            }
+            else if (BonusTypeUtilities.ContainsFlies(bonusType))
+            {
+                 if (nameLower.Contains("flies") || nameLower.Contains("propeller") || 
+                     nameLower.Contains("bird") || nameLower.Contains("rocket") || 
+                     nameLower.Contains("plane"))
                     return item;
             }
         }
