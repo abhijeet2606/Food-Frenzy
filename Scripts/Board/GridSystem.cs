@@ -217,6 +217,28 @@ public class GridSystem
         }
         matchesInfo.AddObjectRange(verticalMatches);
 
+        var squareMatches = GetMatchesSquare(go);
+        if (ContainsDestroyRowColumnBonus(squareMatches))
+        {
+            if (!BonusTypeUtilities.ContainsDestroyWholeRowColumn(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.DestroyWholeRowColumn;
+        }
+        if (ContainsExplosionBonus(squareMatches))
+        {
+            var explosionMatches = GetExplosionRange(squareMatches);
+            matchesInfo.AddObjectRange(explosionMatches);
+            if (!BonusTypeUtilities.ContainsExplosion(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.Explosion;
+        }
+        if (ContainsColorBomb(squareMatches))
+        {
+            var colorBombMatches = GetColorBombRange(squareMatches);
+            matchesInfo.AddObjectRange(colorBombMatches);
+            if (!BonusTypeUtilities.ContainsColorBomb(matchesInfo.BonusesContained))
+                matchesInfo.BonusesContained |= BonusType.ColorBomb;
+        }
+        matchesInfo.AddObjectRange(squareMatches);
+
         return matchesInfo;
     }
 
@@ -326,6 +348,56 @@ public class GridSystem
             matches.Add(grid[row, column]);
         }
         return matches;
+    }
+
+    private IEnumerable<GameObject> GetMatchesSquare(GameObject go)
+    {
+        List<GameObject> matches = new List<GameObject>();
+        var shape = go.GetComponent<FoodItem>();
+        int r = shape.Row;
+        int c = shape.Column;
+
+        // Check 4 quadrants
+        // Top-Right
+        if (CheckSquare(r, c, r + 1, c, r, c + 1, r + 1, c + 1, shape))
+            AddSquare(matches, r, c, r + 1, c, r, c + 1, r + 1, c + 1);
+
+        // Top-Left
+        if (CheckSquare(r, c, r + 1, c, r, c - 1, r + 1, c - 1, shape))
+            AddSquare(matches, r, c, r + 1, c, r, c - 1, r + 1, c - 1);
+
+        // Bottom-Right
+        if (CheckSquare(r, c, r - 1, c, r, c + 1, r - 1, c + 1, shape))
+            AddSquare(matches, r, c, r - 1, c, r, c + 1, r - 1, c + 1);
+
+        // Bottom-Left
+        if (CheckSquare(r, c, r - 1, c, r, c - 1, r - 1, c - 1, shape))
+            AddSquare(matches, r, c, r - 1, c, r, c - 1, r - 1, c - 1);
+
+        return matches.Distinct();
+    }
+
+    private bool CheckSquare(int r1, int c1, int r2, int c2, int r3, int c3, int r4, int c4, FoodItem shape)
+    {
+        if (!IsValidAndSame(r2, c2, shape)) return false;
+        if (!IsValidAndSame(r3, c3, shape)) return false;
+        if (!IsValidAndSame(r4, c4, shape)) return false;
+        return true;
+    }
+
+    private bool IsValidAndSame(int r, int c, FoodItem shape)
+    {
+        if (r < 0 || r >= GameConstants.Rows || c < 0 || c >= GameConstants.Columns) return false;
+        if (grid[r, c] == null) return false;
+        return grid[r, c].GetComponent<FoodItem>().IsSameType(shape);
+    }
+
+    private void AddSquare(List<GameObject> matches, int r1, int c1, int r2, int c2, int r3, int c3, int r4, int c4)
+    {
+        matches.Add(grid[r1, c1]);
+        matches.Add(grid[r2, c2]);
+        matches.Add(grid[r3, c3]);
+        matches.Add(grid[r4, c4]);
     }
 
     private IEnumerable<GameObject> GetMatchesHorizontally(GameObject go)
