@@ -158,6 +158,13 @@ public class GridSystem
                 }
             }
         }
+        else if (BonusTypeUtilities.ContainsFlies(food.Bonus))
+        {
+             if (other != null)
+             {
+                 matches.Add(other);
+             }
+        }
 
         return matches;
     }

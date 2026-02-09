@@ -1149,7 +1149,7 @@ public class BoardManager : MonoBehaviour
         bool addBonus = (bonusToCreate != BonusType.None);
 
         int timesRun = 1;
-        while (totalMatches.Count >= GameConstants.MinimumMatches)
+        while (totalMatches.Count >= GameConstants.MinimumMatches || (timesRun == 1 && bonusTriggered))
         {
             IncreaseScore((totalMatches.Count - 2) * GameConstants.Match3Score);
 
