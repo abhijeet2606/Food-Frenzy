@@ -6,8 +6,38 @@ using UnityEngine;
 public class GridSystem
 {
     private GameObject[,] grid = new GameObject[GameConstants.Rows, GameConstants.Columns];
+    private bool[,] playableGrid; // Track valid cells
     private GameObject backupG1;
     private GameObject backupG2;
+
+    public GridSystem()
+    {
+        // Default to full grid if not specified
+        playableGrid = new bool[GameConstants.Rows, GameConstants.Columns];
+        for (int r = 0; r < GameConstants.Rows; r++)
+            for (int c = 0; c < GameConstants.Columns; c++)
+                playableGrid[r, c] = true;
+    }
+
+    public void SetLayout(int rows, int cols, int[] layoutData)
+    {
+        if (layoutData == null || layoutData.Length != rows * cols) return;
+        
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                int index = r * cols + c;
+                playableGrid[r, c] = (layoutData[index] == 1);
+            }
+        }
+    }
+
+    public bool IsCellPlayable(int row, int col)
+    {
+        if (row < 0 || row >= GameConstants.Rows || col < 0 || col >= GameConstants.Columns) return false;
+        return playableGrid[row, col];
+    }
 
     public GameObject this[int row, int column]
     {

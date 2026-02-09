@@ -514,6 +514,13 @@ public class BoardManager : MonoBehaviour
     private void HandleLevelComplete()
     {
         isGameOver = true;
+        state = GameState.Win;
+        StartCoroutine(ShowWinRoutine());
+    }
+
+    private IEnumerator ShowWinRoutine()
+    {
+        yield return new WaitForSeconds(1.5f); // Wait before showing win UI
 
         int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
         
@@ -537,7 +544,6 @@ public class BoardManager : MonoBehaviour
         );
 
         if (uiManager != null) uiManager.ShowWin(coinsEarned);
-        state = GameState.Win;
 
         PlayerPrefs.SetInt("TotalCoins", totalCoins + coinsEarned);
         Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Total: {totalCoins + coinsEarned}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
@@ -545,6 +551,20 @@ public class BoardManager : MonoBehaviour
         // Advance level
         PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
         PlayerPrefs.Save();
+    }
+
+    private void HandleLevelLose()
+    {
+        if (isGameOver) return;
+        isGameOver = true;
+        state = GameState.Lose;
+        StartCoroutine(ShowLoseRoutine());
+    }
+
+    private IEnumerator ShowLoseRoutine()
+    {
+        yield return new WaitForSeconds(1.5f); // Wait before showing lose UI
+        if (uiManager != null) uiManager.ShowLose();
     }
 
     private void InitializeVariables()
@@ -1291,9 +1311,7 @@ public class BoardManager : MonoBehaviour
 
         if (currentMoves <= 0 && !isGameOver)
         {
-            isGameOver = true;
-            if (uiManager != null) uiManager.ShowLose();
-            state = GameState.Lose;
+            HandleLevelLose();
         }
         else if (!isGameOver)
         {
