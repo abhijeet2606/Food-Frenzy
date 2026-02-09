@@ -19,4 +19,7 @@ public static class GameConstants
 
     public static readonly int Match3Score = 60;
     public static readonly int SubsequentMatchScore = 1000;
+
+    public static readonly int BaseCoinsReward = 10;
+    public static readonly int CoinsPerMove = 5;
 }

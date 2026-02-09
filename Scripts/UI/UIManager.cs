@@ -15,8 +15,23 @@ public class UIManager : MonoBehaviour
 {
     public Text MovesText;
     public Text ScoreText;
+    public Text CoinsText; // Add this field for Gameplay scene coin display
     public GameObject WinPanel;
     public GameObject LosePanel;
+
+    [Header("Effects")]
+    public CoinShowerEffect coinShower;
+
+    private int _initialCoins;
+
+    private void Start()
+    {
+        _initialCoins = PlayerPrefs.GetInt("TotalCoins", 0);
+        if (CoinsText != null)
+        {
+            CoinsText.text = _initialCoins.ToString();
+        }
+    }
 
     [Header("Goal UI Slots")]
     public GoalUISlot[] GoalSlots; // Ensure you have 3 elements here in Inspector
@@ -127,9 +142,14 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void ShowWin()
+    public void ShowWin(int coinsEarned = 0)
     {
         if (WinPanel != null) WinPanel.SetActive(true);
+        if (coinShower != null && coinsEarned > 0)
+        {
+            // Pass the initial coins so it counts up from there
+            coinShower.PlayShower(coinsEarned, _initialCoins);
+        }
     }
 
     public void ShowLose()

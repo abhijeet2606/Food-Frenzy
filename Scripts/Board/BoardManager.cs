@@ -10,6 +10,9 @@ public class BoardManager : MonoBehaviour
 {
     public Text DebugText;
     public bool ShowDebugInfo = false;
+    
+    [Header("Debug")]
+    public bool DebugWin = false; // Toggle this in Inspector to win instantly
 
     public GridSystem grid;
     
@@ -45,6 +48,10 @@ public class BoardManager : MonoBehaviour
     private GameState state = GameState.None;
     private GameObject hitGo = null;
     private Vector2[] SpawnPositions;
+    
+    // Level Data Tracking
+    private string currentDifficulty = "Normal";
+    private bool boostersUsed = false;
 
     private Vector2 firstTouchPosition;
     private Vector2 finalTouchPosition;
@@ -98,6 +105,7 @@ public class BoardManager : MonoBehaviour
 
         if (data != null)
         {
+            currentDifficulty = string.IsNullOrEmpty(data.difficulty) ? "Normal" : data.difficulty;
             GameConstants.Rows = data.rows;
             GameConstants.Columns = data.columns;
             maxMoves = data.moves;
@@ -503,11 +511,57 @@ public class BoardManager : MonoBehaviour
         InstantiateAndPlaceNewFood(row, col, newPrefab);
     }
 
+    private void HandleLevelComplete()
+    {
+        isGameOver = true;
+
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        
+        // Coin Logic
+        string attemptKey = "Level_" + currentLevel + "_Attempts";
+        bool firstTry = PlayerPrefs.GetInt(attemptKey, 1) == 1; 
+        
+        int winStreak = PlayerPrefs.GetInt("WinStreak", 0);
+        winStreak++; 
+        PlayerPrefs.SetInt("WinStreak", winStreak);
+
+        int totalCoins = PlayerPrefs.GetInt("TotalCoins", 0);
+        
+        int coinsEarned = CoinCalculator.CalculateTotalCoins(
+            currentLevel, 
+            currentMoves, 
+            currentDifficulty, 
+            boostersUsed, 
+            firstTry, 
+            winStreak
+        );
+
+        if (uiManager != null) uiManager.ShowWin(coinsEarned);
+        state = GameState.Win;
+
+        PlayerPrefs.SetInt("TotalCoins", totalCoins + coinsEarned);
+        Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Total: {totalCoins + coinsEarned}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
+
+        // Advance level
+        PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
+        PlayerPrefs.Save();
+    }
+
     private void InitializeVariables()
     {
         score = 0;
         currentMoves = maxMoves;
         isGameOver = false;
+
+        // Track Attempts
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        string attemptKey = "Level_" + currentLevel + "_Attempts";
+        int attempts = PlayerPrefs.GetInt(attemptKey, 0);
+        PlayerPrefs.SetInt(attemptKey, attempts + 1);
+        
+        // Track Boosters (from Home Screen selection)
+        string selected = PlayerPrefs.GetString("SelectedBoosters", "");
+        boostersUsed = !string.IsNullOrEmpty(selected);
 
         if (levelGoals != null)
         {
@@ -580,6 +634,17 @@ public class BoardManager : MonoBehaviour
 
     void Update()
     {
+        // Debug Instant Win
+        if (DebugWin)
+        {
+            DebugWin = false;
+            if (!isGameOver)
+            {
+                HandleLevelComplete();
+            }
+            return;
+        }
+
         // Prevent interaction if clicking on UI (Optional)
         if (EnableUIBlocking && EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
@@ -731,15 +796,7 @@ public class BoardManager : MonoBehaviour
         // Check for Win
         if (CheckWinCondition())
         {
-            isGameOver = true;
-            if (uiManager != null) uiManager.ShowWin();
-            state = GameState.Win;
-            
-            // Advance level
-            int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-            PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
-            PlayerPrefs.Save();
-            
+            HandleLevelComplete();
             yield break;
         }
 
@@ -828,12 +885,7 @@ public class BoardManager : MonoBehaviour
         
         if (CheckWinCondition())
         {
-            isGameOver = true;
-            if (uiManager != null) uiManager.ShowWin();
-            state = GameState.Win;
-            int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-            PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
-            PlayerPrefs.Save();
+            HandleLevelComplete();
             yield break;
         }
 
@@ -935,12 +987,7 @@ public class BoardManager : MonoBehaviour
 
             if (CheckWinCondition())
             {
-                isGameOver = true;
-                if (uiManager != null) uiManager.ShowWin();
-                state = GameState.Win;
-                int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-                PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
-                PlayerPrefs.Save();
+                HandleLevelComplete();
                 yield break;
             }
 
@@ -1215,19 +1262,7 @@ public class BoardManager : MonoBehaviour
             // Check for Win
             if (CheckWinCondition())
             {
-                isGameOver = true;
-                if (uiManager != null) uiManager.ShowWin();
-                state = GameState.Win;
-                
-                // Advance to next level logic
-                int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-                PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
-                PlayerPrefs.Save(); // Ensure data is written
-                Debug.Log($"Level {currentLevel} complete! advancing to Level {currentLevel + 1}");
-                
-                // NO auto-reload anymore. Wait for UI "Continue" button.
-                // StartCoroutine(WaitAndReloadScene());
-                
+                HandleLevelComplete();
                 yield break;
             }
 

@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            // Ensure it's a root object before calling DontDestroyOnLoad
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
         }
         else

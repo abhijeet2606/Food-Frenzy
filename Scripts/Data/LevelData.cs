@@ -15,6 +15,7 @@ public class LevelData
     public int moves;
     public string[] foodTypes;
     public LevelGoalData[] goals;
+    public string difficulty; // "Normal", "Hard", "SuperHard"
 }
 
 [System.Serializable]

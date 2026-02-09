@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class HomeUIManager : MonoBehaviour
 {
     public Text LevelText, LevelText2;
+    public Text CoinsText;
 
     // Track selected boosters
     private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
@@ -27,6 +28,12 @@ public class HomeUIManager : MonoBehaviour
         if (LevelText2 != null)
         {
             LevelText2.text = "Level " + currentLevel;
+        }
+
+        int totalCoins = PlayerPrefs.GetInt("TotalCoins", 0);
+        if (CoinsText != null)
+        {
+            CoinsText.text = totalCoins.ToString();
         }
     }
 
