@@ -147,8 +147,12 @@ public class UIManager : MonoBehaviour
         if (WinPanel != null) WinPanel.SetActive(true);
         if (coinShower != null && coinsEarned > 0)
         {
-            // Pass the initial coins so it counts up from there
-            coinShower.PlayShower(coinsEarned, _initialCoins);
+            // Delay shower slightly to allow WinPanel popup animation to finish/settle
+            DG.Tweening.DOVirtual.DelayedCall(0.5f, () => 
+            {
+                // Pass the initial coins so it counts up from there
+                coinShower.PlayShower(coinsEarned, _initialCoins);
+            });
         }
     }
 

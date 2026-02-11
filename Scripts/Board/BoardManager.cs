@@ -78,6 +78,7 @@ public class BoardManager : MonoBehaviour
     void Start()
     {
         InitializeTypesOnPrefabShapesAndBonuses();
+        if (powerupManager != null) powerupManager.DeselectPowerup();
         SetupLevel();
         if (uiManager != null) uiManager.SetupGoals(levelGoals, FoodPrefabs);
         InitializeBoardAndSpawnPositions();
@@ -311,6 +312,11 @@ public class BoardManager : MonoBehaviour
 
     private void SpawnSingleBooster(string boosterName)
     {
+        if (string.IsNullOrEmpty(boosterName)) return;
+
+        // Sanitize booster name: remove spaces and handle casing
+        boosterName = boosterName.Replace(" ", "").Trim();
+
         GameObject prefabToSpawn = null;
         
         // 1. Try to find exact match in BonusPrefabs
@@ -331,23 +337,34 @@ public class BoardManager : MonoBehaviour
         {
             if (boosterName.Equals("Oven", System.StringComparison.OrdinalIgnoreCase))
             {
-                // Oven -> ColorBomb or Explosion
+                // Oven -> ColorBomb
                 prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("ColorBomb") || p.name.Contains("Rainbow") || p.name.Contains("Oven"));
-            }
-            else if (boosterName.Equals("Hat", System.StringComparison.OrdinalIgnoreCase))
-            {
-                // Hat -> Magic/Special
-                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Hat") || p.name.Contains("Magic"));
-            }
-            else if (boosterName.Equals("Knife", System.StringComparison.OrdinalIgnoreCase))
-            {
-                 // Knife -> Striped/Line
-                 prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Striped") || p.name.Contains("Line") || p.name.Contains("Knife"));
             }
             else if (boosterName.Equals("Pan", System.StringComparison.OrdinalIgnoreCase))
             {
-                // Pan -> Explosion/Wrapped
+                // Pan -> Explosion (3x3)
                 prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Explosion") || p.name.Contains("Wrapped") || p.name.Contains("Pan"));
+            }
+            else if (boosterName.Equals("HorizontalKnife", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Horizontal Knife -> DestroyWholeRow
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Horizontal") || p.name.Contains("Row") || (p.name.Contains("Knife") && !p.name.Contains("Vertical")));
+            }
+            else if (boosterName.Equals("VerticalKnife", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Vertical Knife -> DestroyWholeColumn
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Vertical") || p.name.Contains("Column") || (p.name.Contains("Knife") && !p.name.Contains("Horizontal")));
+            }
+            else if (boosterName.Equals("Flies", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Flies -> Remote Target
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Flies"));
+            }
+
+            else if (boosterName.Equals("Hat", System.StringComparison.OrdinalIgnoreCase))
+            {
+                // Hat (Legacy or alternative Oven)
+                prefabToSpawn = BonusPrefabs.FirstOrDefault(p => p.name.Contains("Hat") || p.name.Contains("Magic"));
             }
         }
 
@@ -411,27 +428,29 @@ public class BoardManager : MonoBehaviour
                  // Fallback inference
                  if (foodItem.Bonus == BonusType.None)
                  {
-                     if (prefabToSpawn.name.Contains("ColorBomb") || prefabToSpawn.name.Contains("Oven")) 
-                        foodItem.Bonus = BonusType.ColorBomb;
-                     else if (prefabToSpawn.name.Contains("Explosion") || prefabToSpawn.name.Contains("Pan")) 
-                        foodItem.Bonus = BonusType.Explosion;
+                    if (prefabToSpawn.name.Contains("ColorBomb") || prefabToSpawn.name.Contains("Oven")) 
+                        foodItem.Bonus = BonusType.Oven;
+                    else if (prefabToSpawn.name.Contains("Explosion") || prefabToSpawn.name.Contains("Pan")) 
+                        foodItem.Bonus = BonusType.Pan;
+                     else if (prefabToSpawn.name.Contains("Flies"))
+                        foodItem.Bonus = BonusType.Flies;
                      else if (prefabToSpawn.name.Contains("Striped") || prefabToSpawn.name.Contains("Line") || prefabToSpawn.name.Contains("Knife"))
                      {
                          // Check name for direction
                          if (prefabToSpawn.name.IndexOf("Vertical", System.StringComparison.OrdinalIgnoreCase) >= 0 || 
                              prefabToSpawn.name.IndexOf("Column", System.StringComparison.OrdinalIgnoreCase) >= 0)
                          {
-                             foodItem.Bonus = BonusType.DestroyWholeColumn;
+                            foodItem.Bonus = BonusType.VerticalKnife;
                          }
                          else if (prefabToSpawn.name.IndexOf("Horizontal", System.StringComparison.OrdinalIgnoreCase) >= 0 || 
                                   prefabToSpawn.name.IndexOf("Row", System.StringComparison.OrdinalIgnoreCase) >= 0)
                          {
-                             foodItem.Bonus = BonusType.DestroyWholeRow;
+                            foodItem.Bonus = BonusType.HorizontalKnife;
                          }
                          else
                          {
-                             // Randomly assign if not specified
-                             foodItem.Bonus = (Random.value > 0.5f) ? BonusType.DestroyWholeRow : BonusType.DestroyWholeColumn;
+                             // Default to Horizontal for Knife if not specified
+                            foodItem.Bonus = BonusType.HorizontalKnife;
                          }
                      }
                  }
@@ -520,7 +539,7 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator ShowWinRoutine()
     {
-        yield return new WaitForSeconds(1.5f); // Wait before showing win UI
+        yield return new WaitForSeconds(0.5f); // Wait before showing win UI
 
         int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
         
@@ -563,7 +582,7 @@ public class BoardManager : MonoBehaviour
 
     private IEnumerator ShowLoseRoutine()
     {
-        yield return new WaitForSeconds(1.5f); // Wait before showing lose UI
+        yield return new WaitForSeconds(0.5f); // Wait before showing lose UI
         if (uiManager != null) uiManager.ShowLose();
     }
 
@@ -674,7 +693,7 @@ public class BoardManager : MonoBehaviour
             if (powerupManager != null && powerupManager.IsPowerupActive() && Input.GetMouseButtonDown(0))
             {
                 var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-                if (hit.collider != null)
+                if (hit.collider != null && hit.collider.GetComponent<FoodItem>() != null)
                 {
                     powerupManager.TryExecutePowerup(hit.collider.gameObject);
                     return;
@@ -728,7 +747,7 @@ public class BoardManager : MonoBehaviour
         if (food == null || food.Bonus == BonusType.None) return;
 
         // Special handling for Color Bomb (Oven) on tap
-        if (BonusTypeUtilities.ContainsColorBomb(food.Bonus))
+        if (BonusTypeUtilities.ContainsOven(food.Bonus))
         {
             // Find a valid adjacent neighbor to use as target color
             GameObject neighbor = GetRandomNeighbor(item);
@@ -842,15 +861,12 @@ public class BoardManager : MonoBehaviour
             // Better to fall back to StartCheckForPotentialMatches which handles idle state?
             // Wait, existing code has `StartCheckForPotentialMatches` which just highlights hints.
             // It DOES NOT automatically destroy matches.
-            
             // The existing `FindMatchesAndCollapse` loop handles chains:
-            // `while (totalMatches.Count >= GameConstants.MinimumMatches)`
             
             // So I should probably structure `ActivateBonusRoutine` to enter a similar loop or call a method that handles the "After Collapse" logic.
             // Since I can't easily reuse `FindMatchesAndCollapse` (it requires hitGo, hitGo2 and does undo swap logic),
-            // I'll just manually call ProcessMatches(chainedMatches) if I had one.
+            // I'll just manually call ProcessMatches(chainedMatches).
             
-            // For now, let's just loop here like FindMatchesAndCollapse does.
             yield return StartCoroutine(ProcessMatchesChain(chainedMatches));
         }
         else
@@ -1174,24 +1190,24 @@ public class BoardManager : MonoBehaviour
         var b1 = grid.AnalyzeMatchShape(hitGo);
         var b2 = grid.AnalyzeMatchShape(hitGo2);
 
-        if (b1 == BonusType.ColorBomb || b2 == BonusType.ColorBomb)
+        if (b1 == BonusType.Oven || b2 == BonusType.Oven)
         {
-            bonusToCreate = BonusType.ColorBomb;
-            hitGoCache = (b1 == BonusType.ColorBomb) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
+            bonusToCreate = BonusType.Oven;
+            hitGoCache = (b1 == BonusType.Oven) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
         }
-        else if (b1 == BonusType.Explosion || b2 == BonusType.Explosion)
+        else if (b1 == BonusType.Pan || b2 == BonusType.Pan)
         {
-            bonusToCreate = BonusType.Explosion;
-            hitGoCache = (b1 == BonusType.Explosion) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
+            bonusToCreate = BonusType.Pan;
+            hitGoCache = (b1 == BonusType.Pan) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
         }
         else if (b1 == BonusType.Flies || b2 == BonusType.Flies)
         {
             bonusToCreate = BonusType.Flies;
             hitGoCache = (b1 == BonusType.Flies) ? hitGo.GetComponent<FoodItem>() : hitGo2.GetComponent<FoodItem>();
         }
-        else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(b1) || BonusTypeUtilities.ContainsDestroyWholeRowColumn(b2))
+        else if (BonusTypeUtilities.ContainsLinearKnife(b1) || BonusTypeUtilities.ContainsLinearKnife(b2))
         {
-            if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(b1))
+            if (BonusTypeUtilities.ContainsLinearKnife(b1))
             {
                  bonusToCreate = b1;
                  hitGoCache = hitGo.GetComponent<FoodItem>();
@@ -1203,10 +1219,10 @@ public class BoardManager : MonoBehaviour
             }
         }
 
-        if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGomatchesInfo.BonusesContained) ||
-            BonusTypeUtilities.ContainsDestroyWholeRowColumn(hitGo2matchesInfo.BonusesContained) ||
-            BonusTypeUtilities.ContainsExplosion(hitGomatchesInfo.BonusesContained) ||
-            BonusTypeUtilities.ContainsExplosion(hitGo2matchesInfo.BonusesContained) ||
+        if (BonusTypeUtilities.ContainsLinearKnife(hitGomatchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsLinearKnife(hitGo2matchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsPan(hitGomatchesInfo.BonusesContained) ||
+            BonusTypeUtilities.ContainsPan(hitGo2matchesInfo.BonusesContained) ||
             BonusTypeUtilities.ContainsFlies(hitGomatchesInfo.BonusesContained) ||
             BonusTypeUtilities.ContainsFlies(hitGo2matchesInfo.BonusesContained))
         {
@@ -1401,7 +1417,7 @@ public class BoardManager : MonoBehaviour
         if (string.IsNullOrEmpty(type)) return null;
 
         // 1. Color Bomb Check (5 in a straight line)
-        if (BonusTypeUtilities.ContainsColorBomb(bonusType))
+        if (BonusTypeUtilities.ContainsOven(bonusType))
         {
             foreach (var item in BonusPrefabs)
             {
@@ -1422,22 +1438,22 @@ public class BoardManager : MonoBehaviour
             {
                 string nameLower = item.name.ToLower();
 
-                if (BonusTypeUtilities.ContainsDestroyWholeRow(bonusType))
+                if (BonusTypeUtilities.ContainsHorizontalKnife(bonusType))
                 {
                     if (nameLower.Contains("horizontal") || nameLower.Contains("row") || nameLower.Contains("sideways"))
                         return item;
                 }
-                else if (BonusTypeUtilities.ContainsDestroyWholeColumn(bonusType))
+                else if (BonusTypeUtilities.ContainsVerticalKnife(bonusType))
                 {
                     if (nameLower.Contains("vertical") || nameLower.Contains("column") || nameLower.Contains("upside"))
                         return item;
                 }
-                else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(bonusType))
+                else if (BonusTypeUtilities.ContainsLinearKnife(bonusType))
                 {
                     if (nameLower.Contains("striped") || nameLower.Contains("knife") || nameLower.Contains("blender"))
                         return item;
                 }
-                else if (BonusTypeUtilities.ContainsExplosion(bonusType))
+                else if (BonusTypeUtilities.ContainsPan(bonusType))
                 {
                     if (nameLower.Contains("explosion") || nameLower.Contains("package") || 
                         nameLower.Contains("wrapped") || nameLower.Contains("bomb") || 
@@ -1459,22 +1475,22 @@ public class BoardManager : MonoBehaviour
         {
             string nameLower = item.name.ToLower();
 
-            if (BonusTypeUtilities.ContainsDestroyWholeRow(bonusType))
+            if (BonusTypeUtilities.ContainsHorizontalKnife(bonusType))
             {
                 if (nameLower.Contains("horizontal") || nameLower.Contains("row") || nameLower.Contains("sideways"))
                     return item;
             }
-            else if (BonusTypeUtilities.ContainsDestroyWholeColumn(bonusType))
+            else if (BonusTypeUtilities.ContainsVerticalKnife(bonusType))
             {
                 if (nameLower.Contains("vertical") || nameLower.Contains("column") || nameLower.Contains("upside"))
                     return item;
             }
-            else if (BonusTypeUtilities.ContainsDestroyWholeRowColumn(bonusType))
+            else if (BonusTypeUtilities.ContainsLinearKnife(bonusType))
             {
                 if (nameLower.Contains("striped") || nameLower.Contains("knife") || nameLower.Contains("blender"))
                     return item;
             }
-            else if (BonusTypeUtilities.ContainsExplosion(bonusType))
+            else if (BonusTypeUtilities.ContainsPan(bonusType))
             {
                 if (nameLower.Contains("explosion") || nameLower.Contains("package") || 
                     nameLower.Contains("wrapped") || nameLower.Contains("bomb") || 
@@ -1635,35 +1651,35 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
-    public void ApplyKnifePowerup(GameObject item)
+
+
+    public void ApplyHorizontalKnifePowerup(GameObject item)
     {
-        var shape = item.GetComponent<FoodItem>();
+        // Removes entire line horizontally (Row)
+        int row = item.GetComponent<FoodItem>().Row;
         List<GameObject> items = new List<GameObject>();
-        if (BonusTypeUtilities.ContainsDestroyWholeRow(shape.Bonus))
+        for (int col = 0; col < GameConstants.Columns; col++)
         {
-            int row = shape.Row;
-            for (int c = 0; c < GameConstants.Columns; c++)
-            {
-                if (grid[row, c] != null) items.Add(grid[row, c]);
-            }
-        }
-        else if (BonusTypeUtilities.ContainsDestroyWholeColumn(shape.Bonus))
-        {
-            int col = shape.Column;
-            for (int r = 0; r < GameConstants.Rows; r++)
-            {
-                if (grid[r, col] != null) items.Add(grid[r, col]);
-            }
-        }
-        else
-        {
-            items.Add(item);
+            if (grid[row, col] != null) items.Add(grid[row, col]);
         }
         StartCoroutine(DestroyItemsRoutine(items, item));
     }
 
-    public void ApplyOvenPowerup(GameObject item)
+    public void ApplyVerticalKnifePowerup(GameObject item)
     {
+        // Removes entire line vertically (Column)
+        int col = item.GetComponent<FoodItem>().Column;
+        List<GameObject> items = new List<GameObject>();
+        for (int row = 0; row < GameConstants.Rows; row++)
+        {
+            if (grid[row, col] != null) items.Add(grid[row, col]);
+        }
+        StartCoroutine(DestroyItemsRoutine(items, item));
+    }
+
+    public void ApplyPanPowerup(GameObject item)
+    {
+        // Triggers a 3x3 explosion area
         var shape = item.GetComponent<FoodItem>();
         int row = shape.Row;
         int col = shape.Column;
@@ -1681,19 +1697,9 @@ public class BoardManager : MonoBehaviour
         StartCoroutine(DestroyItemsRoutine(items, item));
     }
 
-    public void ApplyPanPowerup(GameObject item)
+    public void ApplyOvenPowerup(GameObject item)
     {
-        int row = item.GetComponent<FoodItem>().Row;
-        List<GameObject> items = new List<GameObject>();
-        for (int col = 0; col < GameConstants.Columns; col++)
-        {
-            if (grid[row, col] != null) items.Add(grid[row, col]);
-        }
-        StartCoroutine(DestroyItemsRoutine(items, item));
-    }
-
-    public void ApplyHatPowerup(GameObject item)
-    {
+        // Acts as a Color Bomb - destroys all items of one color
         string type = item.GetComponent<FoodItem>().Type;
         List<GameObject> items = new List<GameObject>();
         for (int r = 0; r < GameConstants.Rows; r++)
@@ -1708,6 +1714,20 @@ public class BoardManager : MonoBehaviour
             }
         }
         StartCoroutine(DestroyItemsRoutine(items, item));
+    }
+
+    public void ApplyFliesPowerup(GameObject item)
+    {
+        // The remote target bonus
+        state = GameState.Animating;
+        StopCheckForPotentialMatches();
+        StartCoroutine(ActivateFliesRoutine(item));
+    }
+
+    public void ApplyHatPowerup(GameObject item)
+    {
+        // Redirecting to Oven logic as requested for Color Bomb behavior
+        ApplyOvenPowerup(item);
     }
 
     public void ApplyBlenderPowerup()

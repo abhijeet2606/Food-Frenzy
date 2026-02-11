@@ -7,11 +7,11 @@ using System;
 public enum BonusType
 {
     None = 0,
-    DestroyWholeRowColumn = 1 << 0,
-    Explosion = 1 << 1,
-    ColorBomb = 1 << 2,
-    DestroyWholeRow = 1 << 3,
-    DestroyWholeColumn = 1 << 4,
+    // CrossKnife = 1 << 0,
+    Pan = 1 << 1,
+    Oven = 1 << 2,
+    HorizontalKnife = 1 << 3,
+    VerticalKnife = 1 << 4,
     Flies = 1 << 5
 }
 
@@ -25,31 +25,31 @@ public static class BonusTypeUtilities
         return (bt & BonusType.Flies) == BonusType.Flies;
     }
 
-    public static bool ContainsDestroyWholeRowColumn(BonusType bt)
+    public static bool ContainsLinearKnife(BonusType bt)
     {
-        return (bt & BonusType.DestroyWholeRowColumn) == BonusType.DestroyWholeRowColumn ||
-               (bt & BonusType.DestroyWholeRow) == BonusType.DestroyWholeRow ||
-               (bt & BonusType.DestroyWholeColumn) == BonusType.DestroyWholeColumn;
+        return 
+               (bt & BonusType.HorizontalKnife) == BonusType.HorizontalKnife ||
+               (bt & BonusType.VerticalKnife) == BonusType.VerticalKnife;
     }
 
-    public static bool ContainsDestroyWholeRow(BonusType bt)
+    public static bool ContainsHorizontalKnife(BonusType bt)
     {
-        return (bt & BonusType.DestroyWholeRow) == BonusType.DestroyWholeRow;
+        return (bt & BonusType.HorizontalKnife) == BonusType.HorizontalKnife;
     }
 
-    public static bool ContainsDestroyWholeColumn(BonusType bt)
+    public static bool ContainsVerticalKnife(BonusType bt)
     {
-        return (bt & BonusType.DestroyWholeColumn) == BonusType.DestroyWholeColumn;
+        return (bt & BonusType.VerticalKnife) == BonusType.VerticalKnife;
     }
 
-    public static bool ContainsExplosion(BonusType bt)
+    public static bool ContainsPan(BonusType bt)
     {
-        return (bt & BonusType.Explosion) == BonusType.Explosion;
+        return (bt & BonusType.Pan) == BonusType.Pan;
     }
 
-    public static bool ContainsColorBomb(BonusType bt)
+    public static bool ContainsOven(BonusType bt)
     {
-        return (bt & BonusType.ColorBomb) == BonusType.ColorBomb;
+        return (bt & BonusType.Oven) == BonusType.Oven;
     }
 }
 

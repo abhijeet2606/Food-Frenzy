@@ -5,11 +5,12 @@ using System.Collections.Generic;
 public enum PowerupType
 {
     None,
-    Knife, // Destroy single item
-    Oven, // Explosion (3x3)
-    Blender, // Shuffle Board
-    Pan, // Destroy Row
-    Hat // Color Bomb (Destroy all of same color)
+    HorizontalKnife, // Removes entire line horizontally
+    VerticalKnife,   // Removes entire line vertically
+    Pan,             // Triggers a 3x3 explosion area
+    Oven,            // Acts as a Color Bomb - destroys all items of one color
+    Flies,           // The remote target bonus
+    Blender,         // Shuffle Board
 }
 
 public class PowerupManager : MonoBehaviour
@@ -64,25 +65,25 @@ public class PowerupManager : MonoBehaviour
     {
         if (target == null || !IsPowerupActive()) return;
 
-        // Ensure we only execute on valid FoodItems
-        if (target.GetComponent<FoodItem>() == null) return;
-
         switch (currentActivePowerup)
         {
-            case PowerupType.Knife:
-                boardManager.ApplyKnifePowerup(target);
+            case PowerupType.HorizontalKnife:
+                boardManager.ApplyHorizontalKnifePowerup(target);
                 break;
-            case PowerupType.Oven:
-                boardManager.ApplyOvenPowerup(target);
-                break;
-            case PowerupType.Blender:
-                boardManager.ApplyBlenderPowerup();
+            case PowerupType.VerticalKnife:
+                boardManager.ApplyVerticalKnifePowerup(target);
                 break;
             case PowerupType.Pan:
                 boardManager.ApplyPanPowerup(target);
                 break;
-            case PowerupType.Hat:
-                boardManager.ApplyHatPowerup(target);
+            case PowerupType.Oven:
+                boardManager.ApplyOvenPowerup(target);
+                break;
+            case PowerupType.Flies:
+                boardManager.ApplyFliesPowerup(target);
+                break;
+            case PowerupType.Blender:
+                boardManager.ApplyBlenderPowerup();
                 break;
         }
 

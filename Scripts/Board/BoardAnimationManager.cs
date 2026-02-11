@@ -49,7 +49,7 @@ public class BoardAnimationManager : MonoBehaviour
         bool isLinear = isRow || isColumn;
         
         var centerFood = centerItem.GetComponent<FoodItem>();
-        bool isColorBomb = BonusTypeUtilities.ContainsColorBomb(centerFood.Bonus);
+        bool isColorBomb = BonusTypeUtilities.ContainsOven(centerFood.Bonus);
 
         // Sort items
         items = items.OrderBy(i => 
