@@ -549,9 +549,6 @@ public class BoardManager : MonoBehaviour
         
         int winStreak = PlayerPrefs.GetInt("WinStreak", 0);
         winStreak++; 
-        PlayerPrefs.SetInt("WinStreak", winStreak);
-
-        int totalCoins = PlayerPrefs.GetInt("TotalCoins", 0);
         
         int coinsEarned = CoinCalculator.CalculateTotalCoins(
             currentLevel, 
@@ -564,12 +561,9 @@ public class BoardManager : MonoBehaviour
 
         if (uiManager != null) uiManager.ShowWin(coinsEarned);
 
-        PlayerPrefs.SetInt("TotalCoins", totalCoins + coinsEarned);
-        Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Total: {totalCoins + coinsEarned}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
-
-        // Advance level
-        PlayerPrefs.SetInt("CurrentLevel", currentLevel + 1);
-        PlayerPrefs.Save();
+        var progress = ProgressDataManager.EnsureInstance();
+        progress.ApplyLevelCompleted(currentLevel, coinsEarned, winStreak);
+        Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Total: {PlayerPrefs.GetInt("TotalCoins", 0)}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
     }
 
     private void HandleLevelLose()

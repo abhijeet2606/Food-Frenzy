@@ -2,6 +2,7 @@ using UnityEngine;
 
 public static class CoinCalculator
 {
+    private const int MaxCoinsPerLevel = 100;
     // 1. Base Coins per Level Range
     public static int GetBaseCoins(int level)
     {
@@ -42,15 +43,15 @@ public static class CoinCalculator
         int bonus = 0;
         
         // No booster used
-        if (!boostersUsed) bonus += 10;
+        if (!boostersUsed) bonus += 5;
         
         // First try win
-        if (firstTry) bonus += 15;
+        if (firstTry) bonus += 5;
         
         // Win streak (3+)
         if (winStreak >= 3)
         {
-            bonus += 5 * winStreak;
+            bonus += Mathf.Min(winStreak - 2, 5);
         }
 
         return bonus;
@@ -66,23 +67,9 @@ public static class CoinCalculator
         
         int coins = Mathf.RoundToInt(rawCoins * multiplier);
         
-        // Add bonuses
-        // Only turn on bonuses after level 30 as per request (optional, but implemented for safety)
-        if (level > 30)
-        {
-            coins += GetBonusCoins(boostersUsed, firstTry, winStreak);
-        }
+        coins += GetBonusCoins(boostersUsed, firstTry, winStreak);
 
-        // Cap max coins
-        int maxCoins = baseCoins * 4;
-        
-        // Ensure bonus doesn't break the cap too much? 
-        // The user said "MaxCoins = BaseCoins * 4". 
-        // If bonus pushes it over, should we cap? 
-        // "MaxCoins = BaseCoins * 4" usually applies to the base+moves part. 
-        // But let's apply it to the final result to be safe against inflation.
-        // Or maybe just the multiplier part.
-        
-        return Mathf.Min(coins, maxCoins);
+        if (coins < 0) coins = 0;
+        return Mathf.Min(coins, MaxCoinsPerLevel);
     }
 }

@@ -17,6 +17,8 @@ public class PowerupManager : MonoBehaviour
 {
     public BoardManager boardManager;
     public PowerupType currentActivePowerup = PowerupType.None;
+    private float deselectBlockWindow = 0.08f;
+    private float deselectBlockEndTime = 0f;
 
     void Awake()
     {
@@ -25,35 +27,33 @@ public class PowerupManager : MonoBehaviour
 
     public void SelectPowerup(string typeName)
     {
+        if (Time.time < deselectBlockEndTime) return;
+
         if (boardManager == null)
         {
             Debug.LogError("BoardManager not assigned in PowerupManager");
             return;
         }
 
-        try
-        {
-            PowerupType type = (PowerupType)System.Enum.Parse(typeof(PowerupType), typeName);
-            
-            if (currentActivePowerup == type)
-            {
-                // Toggle off if already selected
-                currentActivePowerup = PowerupType.None;
-            }
-            else
-            {
-                currentActivePowerup = type;
-            }
-        }
-        catch
+        if (!System.Enum.TryParse(typeName, ignoreCase: true, out PowerupType type))
         {
             currentActivePowerup = PowerupType.None;
+            return;
         }
+
+        if (type != PowerupType.None && GetLocalPowerupCount(type) <= 0)
+        {
+            currentActivePowerup = PowerupType.None;
+            return;
+        }
+
+        currentActivePowerup = (currentActivePowerup == type) ? PowerupType.None : type;
     }
 
     public void DeselectPowerup()
     {
         currentActivePowerup = PowerupType.None;
+        deselectBlockEndTime = Time.time + deselectBlockWindow;
     }
 
     public bool IsPowerupActive()
@@ -64,6 +64,13 @@ public class PowerupManager : MonoBehaviour
     public void TryExecutePowerup(GameObject target)
     {
         if (target == null || !IsPowerupActive()) return;
+        if (Time.time < deselectBlockEndTime) return;
+
+        if (GetLocalPowerupCount(currentActivePowerup) <= 0)
+        {
+            DeselectPowerup();
+            return;
+        }
 
         switch (currentActivePowerup)
         {
@@ -87,6 +94,42 @@ public class PowerupManager : MonoBehaviour
                 break;
         }
 
+        ConsumeLocalPowerup(currentActivePowerup, 1);
         DeselectPowerup();
+    }
+
+    private static int GetLocalPowerupCount(PowerupType type)
+    {
+        string key = GetPowerupKey(type);
+        if (string.IsNullOrEmpty(key)) return int.MaxValue;
+        return ProgressDataManager.EnsureInstance().GetPowerupCount(key);
+    }
+
+    private static void ConsumeLocalPowerup(PowerupType type, int amount)
+    {
+        string key = GetPowerupKey(type);
+        if (string.IsNullOrEmpty(key)) return;
+        ProgressDataManager.EnsureInstance().ConsumePowerup(key, amount);
+    }
+
+    private static string GetPowerupKey(PowerupType type)
+    {
+        switch (type)
+        {
+            case PowerupType.HorizontalKnife:
+                return "Powerup_HorizontalKnife";
+            case PowerupType.VerticalKnife:
+                return "Powerup_VerticalKnife";
+            case PowerupType.Pan:
+                return "Powerup_Pan";
+            case PowerupType.Oven:
+                return "Powerup_Oven";
+            case PowerupType.Flies:
+                return "Powerup_Flies";
+            case PowerupType.Blender:
+                return "Powerup_Blender";
+            default:
+                return null;
+        }
     }
 }

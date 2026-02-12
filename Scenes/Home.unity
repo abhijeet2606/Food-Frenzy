@@ -1578,7 +1578,7 @@ GameObject:
   - component: {fileID: 318669766}
   - component: {fileID: 318669765}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: PanText (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1662,7 +1662,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &334669536
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2046,8 +2046,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 4.1381073, y: 4.6163}
+  m_SizeDelta: {x: -66.4653, y: -67.3089}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &374791023
 MonoBehaviour:
@@ -4205,6 +4205,12 @@ MonoBehaviour:
   LevelText: {fileID: 1277213063}
   LevelText2: {fileID: 1240651421}
   CoinsText: {fileID: 1833904828}
+  ApiBaseUrl: https://apigame.blazemobilestudio.com/api
+  OvenCountText: {fileID: 1491036234}
+  PanCountText: {fileID: 318669765}
+  KnifeCountText: {fileID: 2138252973}
+  LogContinueWithDeviceResponse: 1
+  RedactTokensInLogs: 1
 --- !u!1 &1150731470
 GameObject:
   m_ObjectHideFlags: 0
@@ -4626,8 +4632,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 4.1381073, y: 4.6163}
+  m_SizeDelta: {x: -66.4653, y: -67.3089}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1277213063
 MonoBehaviour:
@@ -4662,7 +4668,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Level 1 '
+  m_Text: Level 111
 --- !u!222 &1277213064
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4983,9 +4989,9 @@ RectTransform:
   - {fileID: 318669764}
   m_Father: {fileID: 914778431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 285, y: -95}
   m_SizeDelta: {x: 190, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1425197493
@@ -5107,7 +5113,7 @@ GameObject:
   - component: {fileID: 1491036235}
   - component: {fileID: 1491036234}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: OvenText (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5165,7 +5171,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 5
+  m_Text: 50
 --- !u!222 &1491036235
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5861,9 +5867,9 @@ RectTransform:
   - {fileID: 1491036233}
   m_Father: {fileID: 914778431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 95, y: -95}
   m_SizeDelta: {x: 190, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1821663106
@@ -6008,9 +6014,9 @@ RectTransform:
   - {fileID: 2138252972}
   m_Father: {fileID: 914778431}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 475, y: -95}
   m_SizeDelta: {x: 190, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1822231912
@@ -7157,7 +7163,7 @@ GameObject:
   - component: {fileID: 2138252974}
   - component: {fileID: 2138252973}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: KnifeText (Legacy)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,0 +1,623 @@
+{
+  "info": {
+    "_postman_id": "ce65324f-a444-4d90-9af3-628e2646d86f",
+    "name": "food frenzy",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "22854270",
+    "_collection_link": "https://go.postman.co/collection/22854270-ce65324f-a444-4d90-9af3-628e2646d86f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login with email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\":\"admin@foodfrenzy.com\",\r\n    \"password\": \"admin@foodfrenzy\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{local}}auth/login/email",
+              "host": [
+                "{{local}}auth"
+              ],
+              "path": [
+                "login",
+                "email"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "continue with device",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n   \"deviceId\":\"device123\",\r\n   \"os\":\"android\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{local}}auth/continue/device",
+              "host": [
+                "{{local}}auth"
+              ],
+              "path": [
+                "continue",
+                "device"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "item": [
+        {
+          "name": "users",
+          "item": [
+            {
+              "name": "get all users",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/users/fetch-all",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "users",
+                    "fetch-all"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get user by id",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/users/6979df5ea6182987a46820cb",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "users",
+                    "6979df5ea6182987a46820cb"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "toggle status",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{local}}admin/users/6979df5ea6182987a46820cb/toggle-block",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "users",
+                    "6979df5ea6182987a46820cb",
+                    "toggle-block"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "powerups",
+          "item": [
+            {
+              "name": "create power ups",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Royal Crown Boost\",\r\n    \"unlockLevel\": 12,\r\n    \"image_url\": \"https://game-assets.com/powerups/royal_crown_boost.png\",\r\n    \"effect\": \"double_score_for_10_seconds\",\r\n    \"isActive\": true\r\n  }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{local}}admin/powerups/create",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "powerups",
+                    "create"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "fetch all power ups",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/powerups/fetch-all",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "powerups",
+                    "fetch-all"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get powerup by id",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/powerups/6979ef193dc93d596b61eaa4",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "powerups",
+                    "6979ef193dc93d596b61eaa4"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update powerup",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Royal Crown Boost updated\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{local}}admin/powerups/6979ef193dc93d596b61eaa4",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "powerups",
+                    "6979ef193dc93d596b61eaa4"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "toggle status",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/powerups/6979ef193dc93d596b61eaa4/toggle",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "powerups",
+                    "6979ef193dc93d596b61eaa4",
+                    "toggle"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "shop items",
+          "item": [
+            {
+              "name": "create shop item",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\": \"Starter Royal Pack\",\r\n    \"category\": 100,\r\n    \"card_image_url\": \"https://game-assets.com/shop/starter_pack.png\",\r\n    \"price\": 49,\r\n    \"currency\": \"INR\",\r\n    \"rewards\": {\r\n      \"coins\": 500,\r\n      \"diamonds\": 5,\r\n      \"life\": 1,\r\n      \"powerUps\": [\r\n        {\r\n          \"powerup_id\": \"6979eef03dc93d596b61ea98\",\r\n          \"quantity\": 2\r\n        }\r\n      ]\r\n    },\r\n    \"minUnlockLevel\": 1,\r\n    \"isActive\": true\r\n    // \"createdBy\": \"64b8f1a2c9a1a12345678901\"\r\n  }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{local}}admin/shop-items/create",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "shop-items",
+                    "create"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "fetch all shop items",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/shop-items/fetch-all",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "shop-items",
+                    "fetch-all"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get shop item by id",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/shop-items/6979fa31c23e2e8251a6256e",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "shop-items",
+                    "6979fa31c23e2e8251a6256e"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "update shop item by id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"title\": \"Royal Crown Offer updated\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{local}}admin/shop-items/6979fa31c23e2e8251a6256e",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "shop-items",
+                    "6979fa31c23e2e8251a6256e"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "toggle shop item by id",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{local}}admin/shop-items/6979fa31c23e2e8251a6256e/toggle",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "shop-items",
+                    "6979fa31c23e2e8251a6256e",
+                    "toggle"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "tasks",
+          "item": [
+            {
+              "name": "create task",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Discover Secret Area\",\r\n  \"description\": \"Unlock hidden map location\",\r\n  \"showDays\": [4,5],\r\n  \"rewards\": {\r\n    \"coins\": 120,\r\n    \"diamonds\": 3,\r\n    \"life\": 0,\r\n    \"powerUps\": []\r\n  }\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{local}}admin/tasks/create",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "tasks",
+                    "create"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "fetch-all-tasks",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Discover Secret Area\",\r\n  \"description\": \"Unlock hidden map location\",\r\n  \"showDays\": [4,5],\r\n  \"rewards\": {\r\n    \"coins\": 120,\r\n    \"diamonds\": 3,\r\n    \"life\": 0,\r\n    \"powerUps\": []\r\n  }\r\n}\r\n"
+                },
+                "url": {
+                  "raw": "{{local}}admin/tasks/fetch-all",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "tasks",
+                    "fetch-all"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "fetch-task-by-id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{local}}admin/tasks/6986f446232e700bd9a1b047",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "tasks",
+                    "6986f446232e700bd9a1b047"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "toggle-task-status",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{local}}admin/tasks/6986f446232e700bd9a1b047/toggle",
+                  "host": [
+                    "{{local}}admin"
+                  ],
+                  "path": [
+                    "tasks",
+                    "6986f446232e700bd9a1b047",
+                    "toggle"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTc5ZGQ5ZGQ2ZDEzMTA0ZTVjZDI1NjEiLCJyb2xlIjoxMDEsInRva2VuVHlwZSI6ImFjY2VzcyIsImlhdCI6MTc3MDQ1MTc4NiwiZXhwIjoxNzczMDQzNzg2fQ.J5vvB4FIyVcYE0yGO2P6tueyXgHShUy3iKeDX6Ab6DU",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "player",
+      "item": [
+        {
+          "name": "tasks",
+          "item": [
+            {
+              "name": "get-tasks",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            }
+          ]
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2OTg2ZjYwZDIzMmU3MDBiZDlhMWIwNmEiLCJyb2xlIjoxMDAsInRva2VuVHlwZSI6ImFjY2VzcyIsImlhdCI6MTc3MDQ1MzA4MCwiZXhwIjoxNzczMDQ1MDgwfQ.rsFlayhLGEEieM2eZaFiINJsnlfAN3c28o1QHIzZo4s",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "local",
+      "value": ""
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
@@ -8,6 +7,7 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState { get; private set; }
     public List<PowerupType> SelectedBoosters = new List<PowerupType>();
+    public string ApiBaseUrl = "https://apigame.blazemobilestudio.com/api";
 
     void Awake()
     {
