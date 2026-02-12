@@ -394,10 +394,29 @@ public sealed class ProgressDataManager : MonoBehaviour
         }
 
         bool isLevelComplete = e.type == (int)SyncEventType.LevelComplete;
+        int levelForRequest = 0;
+        lock (gate)
+        {
+            if (isLevelComplete)
+            {
+                levelForRequest = e.level;
+            }
+            else
+            {
+                if (bundle != null && bundle.hasServerSnapshot && bundle.serverSnapshot != null)
+                {
+                    levelForRequest = Math.Max(0, bundle.serverSnapshot.level - 1);
+                }
+                else
+                {
+                    levelForRequest = 0;
+                }
+            }
+        }
 
         var payload = new LevelCompleteRequest
         {
-            level = isLevelComplete ? 1 : 0,
+            level = levelForRequest,
             coins = isLevelComplete ? e.coinsDelta : 0,
             oven = ovenDelta,
             pan = panDelta,
