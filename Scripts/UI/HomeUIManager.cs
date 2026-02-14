@@ -9,6 +9,8 @@ using UnityEngine.Networking;
 public class HomeUIManager : MonoBehaviour
 {
     private static bool didBackendBootstrapThisSession = false;
+    private const string BlockedKey = "AccountBlocked";
+    private const int OfflineLevelLimit = 10;
 
     public Text LevelText, LevelText2;
     public Text CoinsText;
@@ -18,12 +20,19 @@ public class HomeUIManager : MonoBehaviour
     public Text KnifeCountText;
     public bool LogContinueWithDeviceResponse = true;
     public bool RedactTokensInLogs = true;
+    public GameObject BlockedPanel;
+    public GameObject InternetConnectivityPanel;
 
     // Track selected boosters
     private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
+    private bool isBlocked;
 
     private void Start()
     {
+        isBlocked = PlayerPrefs.GetInt(BlockedKey, 0) == 1;
+        SetBlockedPanelVisible(isBlocked);
+        SetInternetConnectivityPanelVisible(false);
+
         UpdateLevelUI();
         UpdateBoosterCountUI();
         // Reset booster selection on start
@@ -34,6 +43,17 @@ public class HomeUIManager : MonoBehaviour
         {
             StartCoroutine(StartupSyncRoutine());
             didBackendBootstrapThisSession = true;
+        }
+    }
+
+    private void Update()
+    {
+        if (InternetConnectivityPanel != null && InternetConnectivityPanel.activeSelf)
+        {
+            if (Application.internetReachability != NetworkReachability.NotReachable)
+            {
+                SetInternetConnectivityPanelVisible(false);
+            }
         }
     }
 
@@ -108,6 +128,11 @@ public class HomeUIManager : MonoBehaviour
             if (req.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"ContinueWithDevice failed. Url={url} Code={(int)req.responseCode} Error={req.error} Body={PrepareApiLogBody(req.downloadHandler?.text)}");
+                if (req.responseCode == 403)
+                {
+                    SetBlockedState(true);
+                    ClearAuthTokens();
+                }
                 UpdateLevelUI();
                 yield break;
             }
@@ -131,13 +156,20 @@ public class HomeUIManager : MonoBehaviour
 
             if (resp == null || !resp.success)
             {
-                Debug.LogError($"ContinueWithDevice unsuccessful. Url={url} Message={(resp != null ? resp.message : "null response")}");
+                string msg = resp != null ? resp.message : "null response";
+                Debug.LogError($"ContinueWithDevice unsuccessful. Url={url} Message={msg}");
+                if (req.responseCode == 403 || IsBlockedMessage(msg))
+                {
+                    SetBlockedState(true);
+                    ClearAuthTokens();
+                }
                 UpdateLevelUI();
                 yield break;
             }
 
             if (!string.IsNullOrEmpty(resp.accessToken)) PlayerPrefs.SetString("AccessToken", resp.accessToken);
             if (!string.IsNullOrEmpty(resp.refreshToken)) PlayerPrefs.SetString("RefreshToken", resp.refreshToken);
+            SetBlockedState(false);
 
             if (resp.user != null)
             {
@@ -322,6 +354,7 @@ public class HomeUIManager : MonoBehaviour
         int pendingBefore = progress.PendingSyncCount;
 
         yield return ContinueWithDeviceRoutine();
+        if (isBlocked) yield break;
 
         if (pendingBefore > 0)
         {
@@ -427,6 +460,7 @@ public class HomeUIManager : MonoBehaviour
     // Called by UI Buttons (Oven, Hat, Knife)
     public void SelectBooster(string boosterName)
     {
+        if (isBlocked) return;
         if (selectedBoosters.Contains(boosterName))
         {
             // Deselect if already selected
@@ -448,6 +482,14 @@ public class HomeUIManager : MonoBehaviour
 
     public void OnPlayButton()
     {
+        if (isBlocked) return;
+        if (ShouldBlockPlayForOfflineLevel())
+        {
+            SetInternetConnectivityPanelVisible(true);
+            return;
+        }
+        SetInternetConnectivityPanelVisible(false);
+
         ConsumeSelectedBoosters();
         UpdateBoosterCountUI();
 
@@ -516,8 +558,51 @@ public class HomeUIManager : MonoBehaviour
 
     public void OnResetButton()
     {
+        if (isBlocked) return;
         ProgressDataManager.EnsureInstance().OverwriteFromServer(1, -1, -1, -1, -1, -1, -1, -1);
         UpdateLevelUI();
         Debug.Log("Progress reset to Level 1");
+    }
+
+    private void SetBlockedState(bool blocked)
+    {
+        isBlocked = blocked;
+        PlayerPrefs.SetInt(BlockedKey, blocked ? 1 : 0);
+        PlayerPrefs.Save();
+        SetBlockedPanelVisible(blocked);
+    }
+
+    private void SetBlockedPanelVisible(bool visible)
+    {
+        if (BlockedPanel != null) BlockedPanel.SetActive(visible);
+    }
+
+    private void SetInternetConnectivityPanelVisible(bool visible)
+    {
+        if (InternetConnectivityPanel != null) InternetConnectivityPanel.SetActive(visible);
+    }
+
+    private static bool ShouldBlockPlayForOfflineLevel()
+    {
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        if (currentLevel <= OfflineLevelLimit) return false;
+        return Application.internetReachability == NetworkReachability.NotReachable;
+    }
+
+    private static void ClearAuthTokens()
+    {
+        PlayerPrefs.DeleteKey("AccessToken");
+        PlayerPrefs.DeleteKey("RefreshToken");
+        PlayerPrefs.DeleteKey("UserId");
+        PlayerPrefs.DeleteKey("FullName");
+        PlayerPrefs.Save();
+    }
+
+    private static bool IsBlockedMessage(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return false;
+        return message.IndexOf("blocked", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               message.IndexOf("ban", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               message.IndexOf("banned", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }
