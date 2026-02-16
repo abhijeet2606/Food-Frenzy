@@ -4363,10 +4363,16 @@ MonoBehaviour:
   OvenCountText: {fileID: 1491036234}
   PanCountText: {fileID: 318669765}
   KnifeCountText: {fileID: 2138252973}
+  OvenSelectButton: {fileID: 1821663106}
+  OvenSelectedButton: {fileID: 481087607}
+  PanSelectButton: {fileID: 1425197493}
+  PanSelectedButton: {fileID: 339680363}
+  KnifeSelectButton: {fileID: 1822231912}
+  KnifeSelectedButton: {fileID: 1245543954}
   LogContinueWithDeviceResponse: 1
   RedactTokensInLogs: 1
   BlockedPanel: {fileID: 191421891}
-  InternetConnectivityPanel: {fileID: 0}
+  InternetConnectivityPanel: {fileID: 798325866}
 --- !u!1 &1150731470
 GameObject:
   m_ObjectHideFlags: 0

@@ -59,6 +59,9 @@ public class CoinShowerEffect : MonoBehaviour
 
         for (int i = 0; i < visualCoins; i++)
         {
+            int index = i;
+            int addValue = valuePerCoin + (index == visualCoins - 1 ? remainder : 0);
+
             // Spawn
             GameObject coin = CreateCoin();
             if (coin == null) continue;
@@ -99,8 +102,7 @@ public class CoinShowerEffect : MonoBehaviour
             
             // On Complete
             seq.OnComplete(() => {
-                currentDisplayed += valuePerCoin;
-                if (i == visualCoins - 1) currentDisplayed += remainder; // Add remainder on last
+                currentDisplayed += addValue;
                 
                 // Update Text
                 if (CounterText != null)

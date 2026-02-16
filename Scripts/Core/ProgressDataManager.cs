@@ -268,6 +268,39 @@ public sealed class ProgressDataManager : MonoBehaviour
         if (Log) Debug.Log($"[Progress] Inventory local. key={key} amount={amount} pending={PendingSyncCount}");
     }
 
+    public bool TrySpendCoins(int amount, out string error)
+    {
+        error = null;
+        if (amount <= 0)
+        {
+            error = "invalid amount";
+            return false;
+        }
+
+        lock (gate)
+        {
+            if (bundle == null || bundle.snapshot == null)
+            {
+                error = "progress not ready";
+                return false;
+            }
+
+            int current = bundle.snapshot.coins;
+            if (current < amount)
+            {
+                error = "insufficient coins";
+                return false;
+            }
+
+            bundle.snapshot.coins = current - amount;
+            EnqueueSyncEventLocked(SyncEventType.InventoryOnly, 0, -amount);
+            SaveBundleLocked();
+        }
+
+        PublishAll();
+        return true;
+    }
+
     public void OverwriteFromServer(int level, int coins, int oven, int pan, int blender, int horizontalKnife, int verticalKnife, int flies)
     {
         lock (gate)
@@ -417,7 +450,7 @@ public sealed class ProgressDataManager : MonoBehaviour
         var payload = new LevelCompleteRequest
         {
             level = levelForRequest,
-            coins = isLevelComplete ? e.coinsDelta : 0,
+            coins = e.coinsDelta,
             oven = ovenDelta,
             pan = panDelta,
             blender = blenderDelta,
@@ -521,7 +554,7 @@ public sealed class ProgressDataManager : MonoBehaviour
             {
                 last.snapshot = CloneSnapshot(bundle.snapshot);
                 last.level = level;
-                last.coinsDelta = 0;
+                last.coinsDelta += coinsDelta;
                 last.lastError = null;
                 last.nextAttemptUtc = 0;
                 return;

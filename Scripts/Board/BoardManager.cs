@@ -577,7 +577,31 @@ public class BoardManager : MonoBehaviour
     private IEnumerator ShowLoseRoutine()
     {
         yield return new WaitForSeconds(0.5f); // Wait before showing lose UI
-        if (uiManager != null) uiManager.ShowLose();
+        if (uiManager != null) uiManager.ShowLose(this);
+    }
+
+    public bool ContinueAfterExtraMoves(int extraMoves)
+    {
+        if (extraMoves <= 0) return false;
+        if (!isGameOver || state != GameState.Lose) return false;
+
+        currentMoves += extraMoves;
+        isGameOver = false;
+        state = GameState.None;
+
+        if (uiManager != null)
+        {
+            uiManager.HideLose();
+            uiManager.UpdateMoves(currentMoves);
+        }
+
+        StartCheckForPotentialMatches();
+        return true;
+    }
+
+    public bool IsAwaitingExtraMovesContinue()
+    {
+        return isGameOver && state == GameState.Lose;
     }
 
     private void InitializeVariables()
@@ -591,6 +615,7 @@ public class BoardManager : MonoBehaviour
         string attemptKey = "Level_" + currentLevel + "_Attempts";
         int attempts = PlayerPrefs.GetInt(attemptKey, 0);
         PlayerPrefs.SetInt(attemptKey, attempts + 1);
+        PlayerPrefs.SetInt("Level_" + currentLevel + "_ExtraMovesPurchases", 0);
         
         // Track Boosters (from Home Screen selection)
         string selected = PlayerPrefs.GetString("SelectedBoosters", "");

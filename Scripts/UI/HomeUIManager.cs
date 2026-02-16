@@ -18,6 +18,12 @@ public class HomeUIManager : MonoBehaviour
     public Text OvenCountText;
     public Text PanCountText;
     public Text KnifeCountText;
+    public Button OvenSelectButton;
+    public Button OvenSelectedButton;
+    public Button PanSelectButton;
+    public Button PanSelectedButton;
+    public Button KnifeSelectButton;
+    public Button KnifeSelectedButton;
     public bool LogContinueWithDeviceResponse = true;
     public bool RedactTokensInLogs = true;
     public GameObject BlockedPanel;
@@ -81,6 +87,27 @@ public class HomeUIManager : MonoBehaviour
         if (OvenCountText != null) OvenCountText.text = GetPowerupCountForBoosterName("Oven").ToString();
         if (PanCountText != null) PanCountText.text = GetPowerupCountForBoosterName("Pan").ToString();
         if (KnifeCountText != null) KnifeCountText.text = GetPowerupCountForBoosterName("Knife").ToString();
+
+        UpdateBoosterButtonState("Oven", OvenSelectButton, OvenSelectedButton);
+        UpdateBoosterButtonState("Pan", PanSelectButton, PanSelectedButton);
+        UpdateBoosterButtonState("Knife", KnifeSelectButton, KnifeSelectedButton);
+    }
+
+    private void UpdateBoosterButtonState(string boosterName, Button selectButton, Button selectedButton)
+    {
+        int count = GetPowerupCountForBoosterName(boosterName);
+        bool hasAny = count > 0;
+        bool canInteract = hasAny && !isBlocked;
+
+        if (selectButton != null) selectButton.interactable = canInteract;
+        if (selectedButton != null) selectedButton.interactable = canInteract;
+
+        if (!hasAny)
+        {
+            selectedBoosters.Remove(boosterName);
+            if (selectedButton != null) selectedButton.gameObject.SetActive(false);
+            if (selectButton != null) selectButton.gameObject.SetActive(true);
+        }
     }
 
     private IEnumerator ContinueWithDeviceRoutine()
