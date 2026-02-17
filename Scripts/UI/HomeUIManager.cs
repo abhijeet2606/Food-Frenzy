@@ -306,7 +306,7 @@ public class HomeUIManager : MonoBehaviour
             else
             {
                 r.pan = user.pan;
-                r.oven = Mathf.Max(user.oven, user.hat);
+                r.oven = user.oven;
                 r.blender = user.blender;
                 r.verticalKnife = user.verticalKnife;
             }
@@ -316,14 +316,13 @@ public class HomeUIManager : MonoBehaviour
         {
             int pan = TryGetJsonInt(rawJson, "pan");
             int oven = TryGetJsonInt(rawJson, "oven");
-            int hat = TryGetJsonInt(rawJson, "hat");
             int blender = TryGetJsonInt(rawJson, "blender");
             int verticalKnife = TryGetJsonInt(rawJson, "verticalKnife");
 
             if (pan >= 0) r.pan = pan;
             if (blender >= 0) r.blender = blender;
             if (verticalKnife >= 0) r.verticalKnife = verticalKnife;
-            if (oven >= 0 || hat >= 0) r.oven = Mathf.Max(Mathf.Max(r.oven, oven), hat);
+            if (oven >= 0) r.oven = oven;
         }
 
         return r;

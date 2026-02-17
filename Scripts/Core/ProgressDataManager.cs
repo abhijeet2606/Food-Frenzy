@@ -319,6 +319,16 @@ public sealed class ProgressDataManager : MonoBehaviour
 
             bundle.hasServerSnapshot = true;
 
+            if (bundle.snapshot != null && bundle.serverSnapshot != null)
+            {
+                bundle.snapshot.oven = Math.Min(bundle.snapshot.oven, bundle.serverSnapshot.oven);
+                bundle.snapshot.pan = Math.Min(bundle.snapshot.pan, bundle.serverSnapshot.pan);
+                bundle.snapshot.blender = Math.Min(bundle.snapshot.blender, bundle.serverSnapshot.blender);
+                bundle.snapshot.horizontalKnife = Math.Min(bundle.snapshot.horizontalKnife, bundle.serverSnapshot.horizontalKnife);
+                bundle.snapshot.verticalKnife = Math.Min(bundle.snapshot.verticalKnife, bundle.serverSnapshot.verticalKnife);
+                bundle.snapshot.flies = Math.Min(bundle.snapshot.flies, bundle.serverSnapshot.flies);
+            }
+
             if (bundle.queue == null || bundle.queue.Count == 0)
             {
                 bundle.snapshot = CloneSnapshot(bundle.serverSnapshot);
