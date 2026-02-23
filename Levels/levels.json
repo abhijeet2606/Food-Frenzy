@@ -267,7 +267,7 @@
       "levelId": 24,
       "rows": 6,
       "columns": 6,
-      "moves": 20,
+      "moves": 19,
       "foodTypes": ["Burger", "Chesse", "Onion", "Tomato", "Lettuce"],
       "goals": [
         { "type": "Tomato", "count": 30 },

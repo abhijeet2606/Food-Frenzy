@@ -559,6 +559,12 @@ public class BoardManager : MonoBehaviour
             winStreak
         );
 
+        int trophiesEarned = CalculateTrophiesForWin();
+        if (trophiesEarned > 0)
+        {
+            HomeUIManager.AddTrophies(trophiesEarned);
+        }
+
         if (uiManager != null) uiManager.ShowWin(coinsEarned);
 
         var progress = ProgressDataManager.EnsureInstance();
@@ -572,7 +578,24 @@ public class BoardManager : MonoBehaviour
         isGameOver = true;
         state = GameState.Lose;
         HomeUIManager.ConsumeLifeForLose();
+        HomeUIManager.RemoveTrophies(5);
         StartCoroutine(ShowLoseRoutine());
+    }
+
+    private int CalculateTrophiesForWin()
+    {
+        int minTrophies = 5;
+        int maxTrophies = 10;
+
+        if (maxMoves <= 0)
+        {
+            return minTrophies;
+        }
+
+        float ratio = Mathf.Clamp01((float)currentMoves / maxMoves);
+        int bonusRange = maxTrophies - minTrophies;
+        int trophies = minTrophies + Mathf.RoundToInt(ratio * bonusRange);
+        return Mathf.Clamp(trophies, minTrophies, maxTrophies);
     }
 
     private IEnumerator ShowLoseRoutine()
@@ -776,6 +799,7 @@ public class BoardManager : MonoBehaviour
         if (!Application.isPlaying) return;
         if (isGameOver) return;
         HomeUIManager.ConsumeLifeForLose();
+        HomeUIManager.RemoveTrophies(5);
     }
 
     private void ActivateTapBonus(GameObject item)

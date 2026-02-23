@@ -410,7 +410,10 @@ public class HomeUIManager : MonoBehaviour
                     if (resp.user.life >= 0) PlayerPrefs.SetInt(LifeKey, resp.user.life);
                 }
 
-                if (resp.user.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.user.trophies);
+                if (!PlayerPrefs.HasKey(TrophiesKey))
+                {
+                    if (resp.user.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.user.trophies);
+                }
                 ProgressDataManager.EnsureInstance().OverwriteFromServer(
                     serverLevel,
                     coins,
@@ -639,6 +642,24 @@ public class HomeUIManager : MonoBehaviour
             PlayerPrefs.Save();
         }
         return Mathf.Clamp(lives, 0, MaxLife);
+    }
+
+    public static void AddTrophies(int amount)
+    {
+        if (amount <= 0) return;
+        int trophies = PlayerPrefs.GetInt(TrophiesKey, 0);
+        trophies = Mathf.Max(0, trophies + amount);
+        PlayerPrefs.SetInt(TrophiesKey, trophies);
+        PlayerPrefs.Save();
+    }
+
+    public static void RemoveTrophies(int amount)
+    {
+        if (amount <= 0) return;
+        int trophies = PlayerPrefs.GetInt(TrophiesKey, 0);
+        trophies = Mathf.Max(0, trophies - amount);
+        PlayerPrefs.SetInt(TrophiesKey, trophies);
+        PlayerPrefs.Save();
     }
 
     public static void ConsumeLifeForLose()

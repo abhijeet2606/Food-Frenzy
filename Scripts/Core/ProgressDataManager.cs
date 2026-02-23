@@ -540,7 +540,6 @@ public sealed class ProgressDataManager : MonoBehaviour
 
             if (resp.data.level > 0) bundle.serverSnapshot.level = resp.data.level;
             if (resp.data.wallet != null && resp.data.wallet.coins >= 0) bundle.serverSnapshot.coins = resp.data.wallet.coins;
-            if (resp.data.wallet != null && resp.data.wallet.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.data.wallet.trophies);
 
             if (resp.data.inventory != null)
             {
