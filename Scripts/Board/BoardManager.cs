@@ -571,6 +571,7 @@ public class BoardManager : MonoBehaviour
         if (isGameOver) return;
         isGameOver = true;
         state = GameState.Lose;
+        HomeUIManager.ConsumeLifeForLose();
         StartCoroutine(ShowLoseRoutine());
     }
 
@@ -758,6 +759,23 @@ public class BoardManager : MonoBehaviour
                  }
             }
         }
+    }
+
+    private void OnApplicationQuit()
+    {
+        ConsumeLifeForQuitIfNeeded();
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if (pause) ConsumeLifeForQuitIfNeeded();
+    }
+
+    public void ConsumeLifeForQuitIfNeeded()
+    {
+        if (!Application.isPlaying) return;
+        if (isGameOver) return;
+        HomeUIManager.ConsumeLifeForLose();
     }
 
     private void ActivateTapBonus(GameObject item)

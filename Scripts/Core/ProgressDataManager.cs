@@ -9,6 +9,8 @@ using UnityEngine.Networking;
 public sealed class ProgressDataManager : MonoBehaviour
 {
     public static ProgressDataManager Instance;
+    private const string LifeKey = "Life";
+    private const string TrophiesKey = "Trophies";
 
     [Serializable]
     public class ProgressSnapshot
@@ -538,9 +540,11 @@ public sealed class ProgressDataManager : MonoBehaviour
 
             if (resp.data.level > 0) bundle.serverSnapshot.level = resp.data.level;
             if (resp.data.wallet != null && resp.data.wallet.coins >= 0) bundle.serverSnapshot.coins = resp.data.wallet.coins;
+            if (resp.data.wallet != null && resp.data.wallet.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.data.wallet.trophies);
 
             if (resp.data.inventory != null)
             {
+                if (resp.data.inventory.life >= 0) PlayerPrefs.SetInt(LifeKey, resp.data.inventory.life);
                 if (resp.data.inventory.oven >= 0) bundle.serverSnapshot.oven = resp.data.inventory.oven;
                 if (resp.data.inventory.pan >= 0) bundle.serverSnapshot.pan = resp.data.inventory.pan;
                 if (resp.data.inventory.blender >= 0) bundle.serverSnapshot.blender = resp.data.inventory.blender;

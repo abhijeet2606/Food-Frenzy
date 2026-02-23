@@ -5,15 +5,26 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 public class HomeUIManager : MonoBehaviour
 {
     private static bool didBackendBootstrapThisSession = false;
+    private static bool didLeaderboardBootstrapThisSession = false;
     private const string BlockedKey = "AccountBlocked";
     private const int OfflineLevelLimit = 10;
+    private const string LifeKey = "Life";
+    private const string TrophiesKey = "Trophies";
+    private const string LifeNextReadyKey = "LifeNextReadyUtc";
+    private const int MaxLife = 5;
+    private const int LifeRegenSeconds = 15 * 60;
 
     public Text LevelText, LevelText2;
     public Text CoinsText;
+    [FormerlySerializedAs("LivesText")]
+    public Text LifeText;
+    public Text TrophiesText;
+    public Text LifeTimerText;
     public string ApiBaseUrl = "https://apigame.blazemobilestudio.com/api";
     public Text OvenCountText;
     public Text PanCountText;
@@ -26,12 +37,23 @@ public class HomeUIManager : MonoBehaviour
     public Button KnifeSelectedButton;
     public bool LogContinueWithDeviceResponse = true;
     public bool RedactTokensInLogs = true;
+    public bool DebugLeaderboardHighlight = false;
     public GameObject BlockedPanel;
     public GameObject InternetConnectivityPanel;
+    public GameObject LeaderboardPanel;
+    public Transform LeaderboardContent;
+    public LeaderboardRowUI LeaderboardRowPrefab;
+    public Text LeaderboardTierText;
+    public Text LeaderboardUserRankText;
+    public Text LeaderboardUserNameText;
+    public Text LeaderboardUserTrophiesText;
+    public Image LeaderboardUserAvatarImage;
 
     // Track selected boosters
     private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
     private bool isBlocked;
+    private Coroutine leaderboardRoutine;
+    private LeaderboardTierResponse cachedLeaderboard;
 
     private void Start()
     {
@@ -50,6 +72,9 @@ public class HomeUIManager : MonoBehaviour
             StartCoroutine(StartupSyncRoutine());
             didBackendBootstrapThisSession = true;
         }
+
+        SetLeaderboardVisible(false);
+        BootstrapLeaderboardOnce();
     }
 
     private void Update()
@@ -61,6 +86,167 @@ public class HomeUIManager : MonoBehaviour
                 SetInternetConnectivityPanelVisible(false);
             }
         }
+
+        UpdateLifeTimerUI();
+    }
+
+    public void OnLeaderboardButton()
+    {
+        if (isBlocked) return;
+        SetLeaderboardVisible(true);
+        RefreshLeaderboardUIFromLocalFallback();
+        if (cachedLeaderboard != null) ApplyLeaderboardResponse(cachedLeaderboard);
+    }
+
+    public void OnLeaderboardCloseButton()
+    {
+        SetLeaderboardVisible(false);
+    }
+
+    private void SetLeaderboardVisible(bool visible)
+    {
+        if (LeaderboardPanel != null) LeaderboardPanel.SetActive(visible);
+    }
+
+    private void TryFetchLeaderboard()
+    {
+        if (leaderboardRoutine != null) StopCoroutine(leaderboardRoutine);
+        leaderboardRoutine = StartCoroutine(FetchLeaderboardRoutine());
+    }
+
+    private IEnumerator FetchLeaderboardRoutine()
+    {
+        if (string.IsNullOrWhiteSpace(ApiBaseUrl)) yield break;
+        if (Application.internetReachability == NetworkReachability.NotReachable) yield break;
+
+        string accessToken = PlayerPrefs.GetString("AccessToken", "");
+        if (string.IsNullOrEmpty(accessToken)) yield break;
+
+        string url = CombineUrl(ApiBaseUrl, "player/leaderboard/tier");
+        if (DebugLeaderboardHighlight) Debug.Log($"Leaderboard fetch start. Url={url}");
+        using (var req = UnityWebRequest.Get(url))
+        {
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Authorization", "Bearer " + accessToken);
+
+            yield return req.SendWebRequest();
+
+            string body = req.downloadHandler != null ? req.downloadHandler.text : "";
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                if (LogContinueWithDeviceResponse)
+                {
+                    Debug.LogWarning($"Leaderboard fetch failed. Url={url} Code={(int)req.responseCode} Error={req.error} Body={PrepareApiLogBody(body)}");
+                }
+                yield break;
+            }
+
+            LeaderboardTierResponse resp;
+            try
+            {
+                resp = JsonUtility.FromJson<LeaderboardTierResponse>(body);
+            }
+            catch
+            {
+                Debug.LogWarning($"Leaderboard invalid JSON. Url={url} Body={PrepareApiLogBody(body)}");
+                yield break;
+            }
+
+            if (resp == null || !resp.success) yield break;
+            cachedLeaderboard = resp;
+            if (DebugLeaderboardHighlight) Debug.Log($"Leaderboard fetch success. Tier='{resp.tier}' userRank={(resp.userRank != null ? resp.userRank.rank.ToString() : "null")} listCount={(resp.leaderboard != null ? resp.leaderboard.Length : 0)}");
+            if (LeaderboardPanel != null && LeaderboardPanel.activeInHierarchy) ApplyLeaderboardResponse(resp);
+        }
+    }
+
+    private void ApplyLeaderboardResponse(LeaderboardTierResponse resp)
+    {
+        if (resp == null) return;
+
+        if (LeaderboardTierText != null) LeaderboardTierText.text = string.IsNullOrEmpty(resp.tier) ? "" : resp.tier;
+
+        string currentUserId = PlayerPrefs.GetString("UserId", "");
+        string currentFullName = PlayerPrefs.GetString("FullName", "");
+        string highlightId = (resp.userRank != null && !string.IsNullOrEmpty(resp.userRank._id)) ? resp.userRank._id : currentUserId;
+        int highlightRank = resp.userRank != null ? resp.userRank.rank : -1;
+        string highlightFullName = (resp.userRank != null && !string.IsNullOrEmpty(resp.userRank.fullName)) ? resp.userRank.fullName : currentFullName;
+
+        if (DebugLeaderboardHighlight)
+        {
+            Debug.Log($"Leaderboard highlight base: userId='{currentUserId}' fullName='{currentFullName}' highlightId='{highlightId}' highlightFullName='{highlightFullName}' highlightRank={highlightRank} tier='{resp.tier}' listCount={(resp.leaderboard != null ? resp.leaderboard.Length : 0)}");
+        }
+
+        if (resp.userRank != null)
+        {
+            if (LeaderboardUserRankText != null) LeaderboardUserRankText.text = resp.userRank.rank > 0 ? resp.userRank.rank.ToString() : "";
+            if (LeaderboardUserNameText != null) LeaderboardUserNameText.text = string.IsNullOrEmpty(resp.userRank.fullName) ? "-" : resp.userRank.fullName;
+            if (LeaderboardUserTrophiesText != null) LeaderboardUserTrophiesText.text = resp.userRank.trophies >= 0 ? resp.userRank.trophies.ToString() : "0";
+        }
+
+        if (LeaderboardContent != null)
+        {
+            for (int i = LeaderboardContent.childCount - 1; i >= 0; i--)
+            {
+                Destroy(LeaderboardContent.GetChild(i).gameObject);
+            }
+        }
+
+        if (LeaderboardRowPrefab == null || LeaderboardContent == null || resp.leaderboard == null) return;
+
+        bool anyHighlighted = false;
+        for (int i = 0; i < resp.leaderboard.Length; i++)
+        {
+            var e = resp.leaderboard[i];
+            if (e == null) continue;
+
+            var row = Instantiate(LeaderboardRowPrefab, LeaderboardContent);
+            row.gameObject.SetActive(true);
+            row.SetData(e.rank, e.fullName, e.trophies);
+            bool isHighlighted =
+                (!string.IsNullOrEmpty(highlightId) && !string.IsNullOrEmpty(e._id) && string.Equals(e._id, highlightId, StringComparison.OrdinalIgnoreCase)) ||
+                (highlightRank > 0 && e.rank == highlightRank) ||
+                (!string.IsNullOrEmpty(highlightFullName) && !string.IsNullOrEmpty(e.fullName) && string.Equals(e.fullName, highlightFullName, StringComparison.OrdinalIgnoreCase));
+            row.SetHighlighted(isHighlighted);
+            if (isHighlighted) anyHighlighted = true;
+
+            if (DebugLeaderboardHighlight && (isHighlighted || i < 3))
+            {
+                Debug.Log($"Leaderboard row[{i}]: rank={e.rank} id='{e._id}' name='{e.fullName}' trophies={e.trophies} highlighted={isHighlighted}");
+            }
+
+            if (row.AvatarImage != null && !string.IsNullOrEmpty(e.profileImageUrl))
+            {
+                StartCoroutine(LoadAvatarSpriteRoutine(e.profileImageUrl, row.AvatarImage));
+            }
+        }
+
+        if (DebugLeaderboardHighlight && !anyHighlighted)
+        {
+            Debug.LogWarning("Leaderboard: no highlighted row found. Check userRank and row data ids/names/ranks, and ensure HighlightBackgroundSprite is assigned on the row prefab.");
+        }
+    }
+
+    private IEnumerator LoadAvatarSpriteRoutine(string url, Image target)
+    {
+        if (string.IsNullOrEmpty(url) || target == null) yield break;
+
+        using (var req = UnityWebRequestTexture.GetTexture(url))
+        {
+            yield return req.SendWebRequest();
+            if (req.result != UnityWebRequest.Result.Success) yield break;
+
+            var tex = DownloadHandlerTexture.GetContent(req);
+            if (tex == null) yield break;
+
+            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            target.sprite = sprite;
+            target.enabled = true;
+        }
+    }
+
+    private void RefreshLeaderboardUIFromLocalFallback()
+    {
+        if (LeaderboardTierText != null && string.IsNullOrEmpty(LeaderboardTierText.text)) LeaderboardTierText.text = "";
     }
 
     private void UpdateLevelUI()
@@ -79,6 +265,18 @@ public class HomeUIManager : MonoBehaviour
         if (CoinsText != null)
         {
             CoinsText.text = totalCoins.ToString();
+        }
+
+        if (LifeText != null)
+        {
+            int lives = GetCurrentLife();
+            LifeText.text = lives.ToString();
+        }
+
+        if (TrophiesText != null)
+        {
+            int trophies = PlayerPrefs.GetInt(TrophiesKey, 0);
+            TrophiesText.text = trophies.ToString();
         }
     }
 
@@ -206,6 +404,13 @@ public class HomeUIManager : MonoBehaviour
                 int serverLevel = resp.user.level;
                 int coins = GetCoinsFromUser(resp.user);
                 PowerupCounts powerups = GetPowerups(resp.user, rawBody);
+
+                if (!PlayerPrefs.HasKey(LifeKey))
+                {
+                    if (resp.user.life >= 0) PlayerPrefs.SetInt(LifeKey, resp.user.life);
+                }
+
+                if (resp.user.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.user.trophies);
                 ProgressDataManager.EnsureInstance().OverwriteFromServer(
                     serverLevel,
                     coins,
@@ -395,6 +600,135 @@ public class HomeUIManager : MonoBehaviour
 
             yield return ContinueWithDeviceRoutine();
         }
+
+        BootstrapLeaderboardOnce();
+    }
+
+    private void BootstrapLeaderboardOnce()
+    {
+        if (didLeaderboardBootstrapThisSession) return;
+        if (isBlocked) return;
+        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        {
+            if (DebugLeaderboardHighlight) Debug.Log("Leaderboard bootstrap skipped: ApiBaseUrl empty.");
+            return;
+        }
+        if (Application.internetReachability == NetworkReachability.NotReachable)
+        {
+            if (DebugLeaderboardHighlight) Debug.Log("Leaderboard bootstrap skipped: no internet.");
+            return;
+        }
+        string accessToken = PlayerPrefs.GetString("AccessToken", "");
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            if (DebugLeaderboardHighlight) Debug.Log("Leaderboard bootstrap skipped: AccessToken empty.");
+            return;
+        }
+
+        didLeaderboardBootstrapThisSession = true;
+        TryFetchLeaderboard();
+    }
+
+    private static int GetCurrentLife()
+    {
+        int lives = PlayerPrefs.GetInt(LifeKey, MaxLife);
+        if (!PlayerPrefs.HasKey(LifeKey))
+        {
+            lives = MaxLife;
+            PlayerPrefs.SetInt(LifeKey, lives);
+            PlayerPrefs.Save();
+        }
+        return Mathf.Clamp(lives, 0, MaxLife);
+    }
+
+    public static void ConsumeLifeForLose()
+    {
+        int lives = GetCurrentLife();
+        if (lives <= 0) return;
+
+        lives = Mathf.Max(0, lives - 1);
+        PlayerPrefs.SetInt(LifeKey, lives);
+
+        if (lives < MaxLife)
+        {
+            int now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            int existing = PlayerPrefs.GetInt(LifeNextReadyKey, 0);
+            if (existing <= now)
+            {
+                PlayerPrefs.SetInt(LifeNextReadyKey, now + LifeRegenSeconds);
+            }
+        }
+
+        PlayerPrefs.Save();
+    }
+
+    private void UpdateLifeTimerUI()
+    {
+        if (LifeTimerText == null) return;
+
+        int lives = GetCurrentLife();
+        if (lives >= MaxLife)
+        {
+            LifeTimerText.text = "Full";
+            PlayerPrefs.DeleteKey(LifeNextReadyKey);
+            return;
+        }
+
+        int nextReady = PlayerPrefs.GetInt(LifeNextReadyKey, 0);
+        int now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        if (nextReady <= 0)
+        {
+            LifeTimerText.text = "00:00";
+            return;
+        }
+
+        if (now >= nextReady)
+        {
+            int missing = MaxLife - lives;
+            if (missing <= 0)
+            {
+                PlayerPrefs.DeleteKey(LifeNextReadyKey);
+                LifeTimerText.text = "Full";
+                return;
+            }
+
+            int totalIntervals = 1 + Math.Max(0, (now - nextReady) / LifeRegenSeconds);
+            int livesToAdd = Mathf.Min(missing, totalIntervals);
+
+            lives += livesToAdd;
+            PlayerPrefs.SetInt(LifeKey, lives);
+
+            if (lives >= MaxLife)
+            {
+                PlayerPrefs.DeleteKey(LifeNextReadyKey);
+                LifeTimerText.text = "Full";
+                PlayerPrefs.Save();
+                UpdateLevelUI();
+                return;
+            }
+            else
+            {
+                int newNext = nextReady + livesToAdd * LifeRegenSeconds;
+                if (newNext <= now) newNext = now + LifeRegenSeconds;
+
+                PlayerPrefs.SetInt(LifeNextReadyKey, newNext);
+                PlayerPrefs.Save();
+                LifeTimerText.text = FormatSecondsAsTimer(newNext - now);
+                UpdateLevelUI();
+                return;
+            }
+        }
+
+        int remaining = nextReady - now;
+        LifeTimerText.text = FormatSecondsAsTimer(remaining);
+    }
+
+    private static string FormatSecondsAsTimer(int seconds)
+    {
+        if (seconds < 0) seconds = 0;
+        int minutes = seconds / 60;
+        int secs = seconds % 60;
+        return minutes.ToString("00") + ":" + secs.ToString("00");
     }
 
     private string PrepareApiLogBody(string body)
@@ -455,6 +789,7 @@ public class HomeUIManager : MonoBehaviour
         public string id;
         public string fullName;
         public int level;
+        public int trophies = -1;
 
         public int coins = -1;
         public int coinBalance = -1;
@@ -483,6 +818,37 @@ public class HomeUIManager : MonoBehaviour
         public int Blender = -1;
     }
 
+    [Serializable]
+    private class LeaderboardTierResponse
+    {
+        public bool success;
+        public string tier;
+        public LeaderboardUserRank userRank;
+        public LeaderboardEntry[] leaderboard;
+    }
+
+    [Serializable]
+    private class LeaderboardUserRank
+    {
+        public int rank;
+        public string _id;
+        public string fullName;
+        public int level;
+        public int trophies;
+    }
+
+    [Serializable]
+    private class LeaderboardEntry
+    {
+        public int rank;
+        public string _id;
+        public string fullName;
+        public int level;
+        public int trophies;
+        public string profileImageUrl;
+        public bool isDummy;
+    }
+
     // Called by UI Buttons (Oven, Hat, Knife)
     public void SelectBooster(string boosterName)
     {
@@ -509,6 +875,8 @@ public class HomeUIManager : MonoBehaviour
     public void OnPlayButton()
     {
         if (isBlocked) return;
+        int lives = GetCurrentLife();
+        if (lives <= 0) return;
         if (ShouldBlockPlayForOfflineLevel())
         {
             SetInternetConnectivityPanelVisible(true);

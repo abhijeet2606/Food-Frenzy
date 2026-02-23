@@ -228,6 +228,11 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f; // Reset time before leaving
         AudioListener.pause = false; // Ensure audio is resumed
+        var board = FindObjectOfType<BoardManager>();
+        if (board != null)
+        {
+            board.ConsumeLifeForQuitIfNeeded();
+        }
         UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
     }
 
