@@ -53,7 +53,7 @@ public class HomeUIManager : MonoBehaviour
     private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
     private bool isBlocked;
     private Coroutine leaderboardRoutine;
-    private LeaderboardTierResponse cachedLeaderboard;
+    private static LeaderboardTierResponse cachedLeaderboard;
 
     private void Start()
     {
@@ -644,23 +644,7 @@ public class HomeUIManager : MonoBehaviour
         return Mathf.Clamp(lives, 0, MaxLife);
     }
 
-    public static void AddTrophies(int amount)
-    {
-        if (amount <= 0) return;
-        int trophies = PlayerPrefs.GetInt(TrophiesKey, 0);
-        trophies = Mathf.Max(0, trophies + amount);
-        PlayerPrefs.SetInt(TrophiesKey, trophies);
-        PlayerPrefs.Save();
-    }
 
-    public static void RemoveTrophies(int amount)
-    {
-        if (amount <= 0) return;
-        int trophies = PlayerPrefs.GetInt(TrophiesKey, 0);
-        trophies = Mathf.Max(0, trophies - amount);
-        PlayerPrefs.SetInt(TrophiesKey, trophies);
-        PlayerPrefs.Save();
-    }
 
     public static void ConsumeLifeForLose()
     {

@@ -30,7 +30,8 @@ public sealed class ProgressDataManager : MonoBehaviour
     private enum SyncEventType
     {
         LevelComplete = 1,
-        InventoryOnly = 2
+        InventoryOnly = 2,
+        LevelFailed = 3
     }
 
     [Serializable]
@@ -40,6 +41,7 @@ public sealed class ProgressDataManager : MonoBehaviour
         public int type;
         public int level;
         public int coinsDelta;
+        public int trophiesDelta;
         public ProgressSnapshot snapshot;
         public long createdUtc;
         public int attempts;
@@ -63,6 +65,7 @@ public sealed class ProgressDataManager : MonoBehaviour
     {
         public int level;
         public int coins;
+        public int trophies;
         public int oven;
         public int pan;
         public int blender;
@@ -219,7 +222,7 @@ public sealed class ProgressDataManager : MonoBehaviour
         }
     }
 
-    public void ApplyLevelCompleted(int completedLevel, int coinsEarned, int newWinStreak)
+    public void ApplyLevelCompleted(int completedLevel, int coinsEarned, int newWinStreak, int trophiesEarned)
     {
         if (completedLevel <= 0) completedLevel = 1;
         if (coinsEarned < 0) coinsEarned = 0;
@@ -230,13 +233,36 @@ public sealed class ProgressDataManager : MonoBehaviour
             bundle.snapshot.level = Math.Max(bundle.snapshot.level, completedLevel + 1);
             bundle.snapshot.coins = SafeAdd(bundle.snapshot.coins, coinsEarned);
             bundle.snapshot.winStreak = newWinStreak;
+            
+            // Trophies are managed locally and synced via delta
+            int currentTrophies = PlayerPrefs.GetInt(TrophiesKey, 0);
+            PlayerPrefs.SetInt(TrophiesKey, Math.Max(0, currentTrophies + trophiesEarned));
 
-            EnqueueSyncEventLocked(SyncEventType.LevelComplete, completedLevel, coinsEarned);
+            EnqueueSyncEventLocked(SyncEventType.LevelComplete, completedLevel, coinsEarned, trophiesEarned);
             SaveBundleLocked();
         }
 
         PublishAll();
-        if (Log) Debug.Log($"[Progress] LevelComplete local. completedLevel={completedLevel} coinsEarned={coinsEarned} levelNow={PlayerPrefs.GetInt("CurrentLevel", 1)} coinsNow={PlayerPrefs.GetInt("TotalCoins", 0)} pending={PendingSyncCount}");
+        if (Log) Debug.Log($"[Progress] LevelComplete local. completedLevel={completedLevel} coinsEarned={coinsEarned} trophiesDelta={trophiesEarned} levelNow={PlayerPrefs.GetInt("CurrentLevel", 1)} coinsNow={PlayerPrefs.GetInt("TotalCoins", 0)} pending={PendingSyncCount}");
+        if (SyncOnLevelComplete) TrySyncNow();
+    }
+
+    public void ApplyLevelFailed(int level, int trophiesDelta)
+    {
+        lock (gate)
+        {
+            // For a failed level, we don't increase level count or coins (usually 0)
+            // But we do record the trophy deduction
+            int currentTrophies = PlayerPrefs.GetInt(TrophiesKey, 0);
+            PlayerPrefs.SetInt(TrophiesKey, Math.Max(0, currentTrophies + trophiesDelta));
+
+            // Enqueue a LevelFailed event, backend should not increment level
+            EnqueueSyncEventLocked(SyncEventType.LevelFailed, level, 0, trophiesDelta);
+            SaveBundleLocked();
+        }
+
+        PublishAll();
+        if (Log) Debug.Log($"[Progress] LevelFailed local. level={level} trophiesDelta={trophiesDelta} pending={PendingSyncCount}");
         if (SyncOnLevelComplete) TrySyncNow();
     }
 
@@ -262,7 +288,7 @@ public sealed class ProgressDataManager : MonoBehaviour
                 default: return;
             }
 
-            EnqueueSyncEventLocked(SyncEventType.InventoryOnly, 0, 0);
+            EnqueueSyncEventLocked(SyncEventType.InventoryOnly, 0, 0, 0);
             SaveBundleLocked();
         }
 
@@ -295,7 +321,7 @@ public sealed class ProgressDataManager : MonoBehaviour
             }
 
             bundle.snapshot.coins = current - amount;
-            EnqueueSyncEventLocked(SyncEventType.InventoryOnly, 0, -amount);
+            EnqueueSyncEventLocked(SyncEventType.InventoryOnly, 0, -amount, 0);
             SaveBundleLocked();
         }
 
@@ -386,9 +412,13 @@ public sealed class ProgressDataManager : MonoBehaviour
                 if (ok)
                 {
                     RemoveEventByIdLocked(next.id);
-                    if (bundle.queue != null && bundle.queue.Count == 0 && bundle.serverSnapshot != null)
+                    // Only adopt full server snapshot after successful LevelComplete (win) events.
+                    if (next.type == (int)SyncEventType.LevelComplete)
                     {
-                        bundle.snapshot = CloneSnapshot(bundle.serverSnapshot);
+                        if (bundle.queue != null && bundle.queue.Count == 0 && bundle.serverSnapshot != null)
+                        {
+                            bundle.snapshot = CloneSnapshot(bundle.serverSnapshot);
+                        }
                     }
                     SaveBundleLocked();
                 }
@@ -438,13 +468,16 @@ public sealed class ProgressDataManager : MonoBehaviour
             }
         }
 
-        bool isLevelComplete = e.type == (int)SyncEventType.LevelComplete;
         int levelForRequest = 0;
         lock (gate)
         {
-            if (isLevelComplete)
+            if (e.type == (int)SyncEventType.LevelComplete)
             {
                 levelForRequest = e.level;
+            }
+            else if (e.type == (int)SyncEventType.LevelFailed)
+            {
+                levelForRequest = 0;
             }
             else
             {
@@ -463,6 +496,7 @@ public sealed class ProgressDataManager : MonoBehaviour
         {
             level = levelForRequest,
             coins = e.coinsDelta,
+            trophies = e.trophiesDelta,
             oven = ovenDelta,
             pan = panDelta,
             blender = blenderDelta,
@@ -524,12 +558,12 @@ public sealed class ProgressDataManager : MonoBehaviour
                 yield break;
             }
 
-            ApplyServerResponse(resp);
+            ApplyServerResponse(resp, e.type);
             onDone?.Invoke(true);
         }
     }
 
-    private void ApplyServerResponse(LevelCompleteResponse resp)
+    private void ApplyServerResponse(LevelCompleteResponse resp, int triggeringEventType)
     {
         if (resp == null || resp.data == null) return;
 
@@ -538,12 +572,19 @@ public sealed class ProgressDataManager : MonoBehaviour
             if (bundle.serverSnapshot == null) bundle.serverSnapshot = CloneSnapshot(bundle.snapshot);
             bundle.hasServerSnapshot = true;
 
-            if (resp.data.level > 0) bundle.serverSnapshot.level = resp.data.level;
+            if (triggeringEventType == (int)SyncEventType.LevelComplete && resp.data.level > 0)
+            {
+                bundle.serverSnapshot.level = resp.data.level;
+            }
             if (resp.data.wallet != null && resp.data.wallet.coins >= 0) bundle.serverSnapshot.coins = resp.data.wallet.coins;
+            if (resp.data.wallet != null && resp.data.wallet.trophies >= 0) PlayerPrefs.SetInt(TrophiesKey, resp.data.wallet.trophies);
 
             if (resp.data.inventory != null)
             {
-                if (resp.data.inventory.life >= 0) PlayerPrefs.SetInt(LifeKey, resp.data.inventory.life);
+                if (!PlayerPrefs.HasKey(LifeKey))
+                {
+                    if (resp.data.inventory.life >= 0) PlayerPrefs.SetInt(LifeKey, resp.data.inventory.life);
+                }
                 if (resp.data.inventory.oven >= 0) bundle.serverSnapshot.oven = resp.data.inventory.oven;
                 if (resp.data.inventory.pan >= 0) bundle.serverSnapshot.pan = resp.data.inventory.pan;
                 if (resp.data.inventory.blender >= 0) bundle.serverSnapshot.blender = resp.data.inventory.blender;
@@ -556,7 +597,7 @@ public sealed class ProgressDataManager : MonoBehaviour
         }
     }
 
-    private void EnqueueSyncEventLocked(SyncEventType type, int level, int coinsDelta)
+    private void EnqueueSyncEventLocked(SyncEventType type, int level, int coinsDelta, int trophiesDelta)
     {
         if (bundle.queue == null) bundle.queue = new List<PendingSyncEvent>();
 
@@ -568,6 +609,7 @@ public sealed class ProgressDataManager : MonoBehaviour
                 last.snapshot = CloneSnapshot(bundle.snapshot);
                 last.level = level;
                 last.coinsDelta += coinsDelta;
+                last.trophiesDelta += trophiesDelta;
                 last.lastError = null;
                 last.nextAttemptUtc = 0;
                 return;
@@ -581,6 +623,7 @@ public sealed class ProgressDataManager : MonoBehaviour
             type = (int)type,
             level = level,
             coinsDelta = coinsDelta,
+            trophiesDelta = trophiesDelta,
             snapshot = CloneSnapshot(bundle.snapshot),
             createdUtc = now.ToUnixTimeSeconds(),
             attempts = 0,

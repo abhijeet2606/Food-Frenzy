@@ -560,16 +560,12 @@ public class BoardManager : MonoBehaviour
         );
 
         int trophiesEarned = CalculateTrophiesForWin();
-        if (trophiesEarned > 0)
-        {
-            HomeUIManager.AddTrophies(trophiesEarned);
-        }
 
         if (uiManager != null) uiManager.ShowWin(coinsEarned);
 
         var progress = ProgressDataManager.EnsureInstance();
-        progress.ApplyLevelCompleted(currentLevel, coinsEarned, winStreak);
-        Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Total: {PlayerPrefs.GetInt("TotalCoins", 0)}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
+        progress.ApplyLevelCompleted(currentLevel, coinsEarned, winStreak, trophiesEarned);
+        Debug.Log($"Level Won! Coins Earned: {coinsEarned}. Trophies: {trophiesEarned}. Total: {PlayerPrefs.GetInt("TotalCoins", 0)}. Streak: {winStreak}. FirstTry: {firstTry}. Difficulty: {currentDifficulty}");
     }
 
     private void HandleLevelLose()
@@ -578,7 +574,10 @@ public class BoardManager : MonoBehaviour
         isGameOver = true;
         state = GameState.Lose;
         HomeUIManager.ConsumeLifeForLose();
-        HomeUIManager.RemoveTrophies(5);
+        
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        ProgressDataManager.EnsureInstance().ApplyLevelFailed(currentLevel, -5);
+        
         StartCoroutine(ShowLoseRoutine());
     }
 
@@ -799,7 +798,9 @@ public class BoardManager : MonoBehaviour
         if (!Application.isPlaying) return;
         if (isGameOver) return;
         HomeUIManager.ConsumeLifeForLose();
-        HomeUIManager.RemoveTrophies(5);
+
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        ProgressDataManager.EnsureInstance().ApplyLevelFailed(currentLevel, -5);
     }
 
     private void ActivateTapBonus(GameObject item)
