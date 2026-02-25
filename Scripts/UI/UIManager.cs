@@ -22,6 +22,9 @@ public class UIManager : MonoBehaviour
 
     [Header("Effects")]
     public CoinShowerEffect coinShower;
+    public string WinFXKey = "fx_confetti";
+    public string LoseFXKey = "fx_lose_puff";
+    public string GoalCompleteFXKey = "fx_goal_sparkle";
 
     private int _initialCoins;
     private BoardManager _boardManager;
@@ -156,6 +159,15 @@ public class UIManager : MonoBehaviour
                 goal.GoalCountText.gameObject.SetActive(false);
             }
         }
+        if (remaining == 0 && goal.GoalIcon != null)
+        {
+            var fx = FXManager.EnsureInstance();
+            if (fx != null && !string.IsNullOrEmpty(GoalCompleteFXKey))
+            {
+                Vector3 pos = goal.GoalIcon.transform.position;
+                fx.Play(GoalCompleteFXKey, pos, null, 1.0f);
+            }
+        }
     }
 
     public void ShowWin(int coinsEarned = 0)
@@ -165,6 +177,13 @@ public class UIManager : MonoBehaviour
         if (CoinsText != null) CoinsText.text = startCoins.ToString();
 
         if (WinPanel != null) WinPanel.SetActive(true);
+        var fx = FXManager.EnsureInstance();
+        if (fx != null && !string.IsNullOrEmpty(WinFXKey))
+        {
+            var cam = Camera.main;
+            Vector3 pos = cam != null ? cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.6f, 10f)) : Vector3.zero;
+            fx.Play(WinFXKey, pos, null, 1.5f);
+        }
         if (coinShower != null && coinsEarned > 0)
         {
             // Delay shower slightly to allow WinPanel popup animation to finish/settle
@@ -185,6 +204,13 @@ public class UIManager : MonoBehaviour
     {
         _boardManager = boardManager;
         if (LosePanel != null) LosePanel.SetActive(true);
+        var fx = FXManager.EnsureInstance();
+        if (fx != null && !string.IsNullOrEmpty(LoseFXKey))
+        {
+            var cam = Camera.main;
+            Vector3 pos = cam != null ? cam.ScreenToWorldPoint(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 10f)) : Vector3.zero;
+            fx.Play(LoseFXKey, pos, null, 1.0f);
+        }
         RefreshLosePurchaseUI();
     }
 

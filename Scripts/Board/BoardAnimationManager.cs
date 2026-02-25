@@ -23,6 +23,11 @@ public class BoardAnimationManager : MonoBehaviour
     public float powerupPopupDuration = 0.2f;
     public float powerupVanishDuration = 0.26f;
 
+    [Header("VFX Keys")]
+    public string PopFXKey = "fx_pop_small";
+    public string SweepFXKey = "fx_row_sweep";
+    public string BombFXKey = "fx_bomb_big";
+
     public float AnimateDestruction(List<GameObject> items, GameObject centerItem = null)
     {
         if (items == null || items.Count == 0) return 0f;
@@ -38,6 +43,11 @@ public class BoardAnimationManager : MonoBehaviour
             foreach (var item in items)
             {
                 AnimateSingleItem(item, 0f, 0f, false);
+                var fx = FXManager.EnsureInstance();
+                if (fx != null && !string.IsNullOrEmpty(PopFXKey))
+                {
+                    fx.Play(PopFXKey, item.transform.position, null, 0.8f);
+                }
             }
             return 0f; // No extra wait time needed for simple matches
         }
@@ -50,6 +60,20 @@ public class BoardAnimationManager : MonoBehaviour
         
         var centerFood = centerItem.GetComponent<FoodItem>();
         bool isColorBomb = BonusTypeUtilities.ContainsOven(centerFood.Bonus);
+
+        // Play center VFX once
+        var centerFx = FXManager.EnsureInstance();
+        if (centerFx != null)
+        {
+            if (isColorBomb && !string.IsNullOrEmpty(BombFXKey))
+            {
+                centerFx.Play(BombFXKey, centerItem.transform.position, null, 1.2f);
+            }
+            else if (isLinear && !string.IsNullOrEmpty(SweepFXKey))
+            {
+                centerFx.Play(SweepFXKey, centerItem.transform.position, null, 1.0f);
+            }
+        }
 
         // Sort items
         items = items.OrderBy(i => 
@@ -121,6 +145,12 @@ public class BoardAnimationManager : MonoBehaviour
             }
 
             AnimateSingleItem(item, delay, holdTime, true);
+            var fx = FXManager.EnsureInstance();
+            if (fx != null && !string.IsNullOrEmpty(PopFXKey))
+            {
+                // Stagger pop FX in sync with delay
+                DOVirtual.DelayedCall(delay, () => fx.Play(PopFXKey, item.transform.position, null, 0.8f));
+            }
         }
 
         if (!isLinear || isColorBomb)

@@ -261,6 +261,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Food_Burger
       objectReference: {fileID: 0}
+    - target: {fileID: 4994891432327177901, guid: f47c08a31c668fc4c9ff5b8529b42f29,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -650,6 +655,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Food_Patties
       objectReference: {fileID: 0}
+    - target: {fileID: 4432765593972045322, guid: 1a4c71e8bbef5054ebc920c70ffd7e55,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5240387858537273737, guid: 1a4c71e8bbef5054ebc920c70ffd7e55,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1006,7 +1016,7 @@ LightingSettings:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Settings.lighting
-  serializedVersion: 9
+  serializedVersion: 10
   m_EnableBakedLightmaps: 1
   m_EnableRealtimeLightmaps: 0
   m_RealtimeEnvironmentLighting: 1
@@ -1021,6 +1031,12 @@ LightingSettings:
   m_BakeResolution: 50
   m_Padding: 2
   m_LightmapCompression: 0
+  m_LightmapPackingMode: 1
+  m_LightmapPackingMethod: 0
+  m_XAtlasPackingAttempts: 16384
+  m_XAtlasBruteForce: 0
+  m_XAtlasBlockAlign: 0
+  m_XAtlasRepackUnderutilizedLightmaps: 1
   m_AO: 1
   m_AOMaxDistance: 1
   m_CompAOExponent: 1
@@ -1419,6 +1435,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Food_Onion
+      objectReference: {fileID: 0}
+    - target: {fileID: 8294982415846462926, guid: 80e8af2b4885c204c9b4f2da0c432b96,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2635,6 +2656,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Food_Lettuce
       objectReference: {fileID: 0}
+    - target: {fileID: 1378503738129438951, guid: 7af0ca28b1c49ec4aae66806dcd4124d,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1947620012357536470, guid: 7af0ca28b1c49ec4aae66806dcd4124d,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2712,7 +2738,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &665977710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3076,6 +3102,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 729979870}
   m_CullTransparentMesh: 1
+--- !u!1 &778537592
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 778537593}
+  - component: {fileID: 778537594}
+  m_Layer: 0
+  m_Name: AnimationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &778537593
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778537592}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1310353940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &778537594
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778537592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb533ed68971f242a8077b9481a25e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoardAnimationManager
+  ExplosionPrefabs: []
+  waveStepDelay: 0.2
+  wavePopupDuration: 0.2
+  ovenStepDelay: 0.18
+  regularFadeDuration: 0.2
+  regularScaleDuration: 0.2
+  powerupPopupScale: 1.25
+  powerupPopupDuration: 0.2
+  powerupVanishDuration: 0.26
+  PopFXKey: fx_pop_small
+  SweepFXKey: fx_row_sweep
+  BombFXKey: fx_bomb_big
 --- !u!1 &789578431
 GameObject:
   m_ObjectHideFlags: 0
@@ -4310,6 +4392,9 @@ MonoBehaviour:
   WinPanel: {fileID: 1788431257}
   LosePanel: {fileID: 1803224359}
   coinShower: {fileID: 1788431261}
+  WinFXKey: fx_confetti
+  LoseFXKey: fx_lose_puff
+  GoalCompleteFXKey: fx_goal_sparkle
   LoseBuyMovesButton: {fileID: 414461938}
   LoseBuyMovesButtonText: {fileID: 703940654}
   LoseExtraMovesAmountText: {fileID: 2012558017}
@@ -4892,6 +4977,7 @@ GameObject:
   m_IsActive: 1
 --- !u!212 &1257295515
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4937,6 +5023,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -3
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 1693325352685635598, guid: beb87f740ad755d448dc9892ab8c9066,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -4947,7 +5034,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1257295516
 Transform:
@@ -5525,6 +5611,8 @@ Transform:
   - {fileID: 1834494319}
   - {fileID: 1070222191}
   - {fileID: 1428702627}
+  - {fileID: 1521197164}
+  - {fileID: 778537593}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1330457972 stripped
@@ -6003,6 +6091,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Food_Chesse
       objectReference: {fileID: 0}
+    - target: {fileID: 5340506208678836495, guid: 8c540c10183c7be44ae3652afec55fbb,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6107,6 +6200,7 @@ GameObject:
   m_IsActive: 1
 --- !u!212 &1515245117
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -6152,6 +6246,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: -2
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -2056126039432432040, guid: 8d947f985856a684ca808131368a41f7,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -6162,7 +6257,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &1515245118
 Transform:
@@ -6179,6 +6273,76 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1521197163
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521197164}
+  - component: {fileID: 1521197165}
+  m_Layer: 0
+  m_Name: FXManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1521197164
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521197163}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1310353940}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1521197165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521197163}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b0a7831ba8bd344199fab6d9308962a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FXManager
+  entries:
+  - key: fx_pop_small
+    prefab: {fileID: 6294508013172393196, guid: 043176b6a68be2b43b073aaaa4782c7d,
+      type: 3}
+    preload: 8
+    defaultLifetime: 0.8
+  - key: fx_row_sweep
+    prefab: {fileID: 0}
+    preload: 4
+    defaultLifetime: 1
+  - key: fx_bomb_big
+    prefab: {fileID: 0}
+    preload: 4
+    defaultLifetime: 1.2
+  - key: fx_goal_sparkle
+    prefab: {fileID: 187842, guid: 11cb4356a18183c48b07164222227d2b, type: 3}
+    preload: 4
+    defaultLifetime: 1
+  - key: fx_confetti
+    prefab: {fileID: 105690, guid: c9cde8189605ee449bcc97b998147d85, type: 3}
+    preload: 3
+    defaultLifetime: 1.5
+  - key: fx_lose_puff
+    prefab: {fileID: 195492, guid: 4ee919a3cb1ff3448ae1b4c056dd8c35, type: 3}
+    preload: 3
+    defaultLifetime: 1
 --- !u!1 &1526172524
 GameObject:
   m_ObjectHideFlags: 0
@@ -7745,7 +7909,7 @@ MonoBehaviour:
   uiManager: {fileID: 1070222190}
   powerupManager: {fileID: 1428702626}
   soundManager: {fileID: 1624638386}
-  animationManager: {fileID: 0}
+  animationManager: {fileID: 778537594}
   FoodPrefabs:
   - {fileID: 4994891432327177901, guid: f47c08a31c668fc4c9ff5b8529b42f29, type: 3}
   - {fileID: 5340506208678836495, guid: 8c540c10183c7be44ae3652afec55fbb, type: 3}
@@ -8104,6 +8268,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Food_Tomato
+      objectReference: {fileID: 0}
+    - target: {fileID: 3895141488239480687, guid: 1c4bc79115464be40be4d8ff9498cce7,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8892,6 +9061,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Booster_Oven
       objectReference: {fileID: 0}
+    - target: {fileID: 8647702475404884244, guid: cfb2dda0d114f4d49a83f62da3aab651,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8915,6 +9089,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Booster_Hat
+      objectReference: {fileID: 0}
+    - target: {fileID: 1964925858072215235, guid: 34c5934fad314a048b88841a29d11814,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8318871175169664324, guid: 34c5934fad314a048b88841a29d11814,
         type: 3}
@@ -8989,6 +9168,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Bonus_Knife_Vertical
+      objectReference: {fileID: 0}
+    - target: {fileID: 1544145616445283158, guid: 3e3023bced0a5bc449c572503454527e,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3849863394658440498, guid: 3e3023bced0a5bc449c572503454527e,
         type: 3}
@@ -9096,6 +9280,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Food_Fries
+      objectReference: {fileID: 0}
+    - target: {fileID: 1427630455591956260, guid: afcb24933005dd14aaa763faffff1daa,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7025960730521107004, guid: afcb24933005dd14aaa763faffff1daa,
         type: 3}
@@ -9221,6 +9410,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Booster_Pan
       objectReference: {fileID: 0}
+    - target: {fileID: 6257262385123968430, guid: 6164c0277e0ca1c4bb165fbd4a4dcf02,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9244,6 +9438,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Booster_Blender
+      objectReference: {fileID: 0}
+    - target: {fileID: 5537437507525120555, guid: 9dc85a79f24fed84b85105c670acc8c5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5810117690824000876, guid: 9dc85a79f24fed84b85105c670acc8c5,
         type: 3}
@@ -9324,6 +9523,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Bonus_Flies
+      objectReference: {fileID: 0}
+    - target: {fileID: 625204551858609411, guid: fe0598eae9528864fa7eb86b3b3f6837,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6551923387989183645, guid: fe0598eae9528864fa7eb86b3b3f6837,
         type: 3}
@@ -9442,6 +9646,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Bonus_Knife_Horizontal
+      objectReference: {fileID: 0}
+    - target: {fileID: 6835863993105399688, guid: 1b30ad43a1223014daa479417d8de8d2,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

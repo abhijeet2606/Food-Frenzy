@@ -383,6 +383,7 @@ public class BoardManager : MonoBehaviour
             }
             
             GameObject newBonus = Instantiate(prefabToSpawn, BottomRight + new Vector2(randCol * CandySize.x, randRow * CandySize.y), Quaternion.identity);
+            if (newBonus != null && !newBonus.activeSelf) newBonus.SetActive(true);
             
             // IMMEDIATE GRID UPDATE to prevent MissingReferenceException in other scripts
             grid[randRow, randCol] = newBonus;
@@ -1404,8 +1405,8 @@ public class BoardManager : MonoBehaviour
 
         GameObject Bonus = Instantiate(bonusPrefab, BottomRight
             + new Vector2(hitGoCache.Column * CandySize.x,
-                hitGoCache.Row * CandySize.y), Quaternion.identity)
-            as GameObject;
+                hitGoCache.Row * CandySize.y), Quaternion.identity) as GameObject;
+        if (Bonus != null && !Bonus.activeSelf) Bonus.SetActive(true);
         grid[hitGoCache.Row, hitGoCache.Column] = Bonus;
         
         var BonusShape = Bonus.GetComponent<FoodItem>();
