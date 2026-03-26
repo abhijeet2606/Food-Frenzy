@@ -3259,6 +3259,7 @@ MonoBehaviour:
   PopFXKey: fx_pop_small
   SweepFXKey: fx_row_sweep
   BombFXKey: fx_bomb_big
+  HammerFXKey: fx_bomb_big
   PanSwapFXKey: fx_pan_swap
   OvenSwapFXKey: fx_oven_swap
   KnifeSwapFXKey: fx_knife_swap
@@ -3280,7 +3281,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &789578432
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3656,7 +3657,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 314, y: -340}
+  m_AnchoredPosition: {x: 314, y: -552.56}
   m_SizeDelta: {x: 105, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &882205823
@@ -7758,7 +7759,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1751727635
 RectTransform:
   m_ObjectHideFlags: 0

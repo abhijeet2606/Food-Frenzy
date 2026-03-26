@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: c9126d5c7ba5cc945a8d896ce9f69039
+guid: 7f43151a82d432a4dbd60231435b3850
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7502475019918736526
-    second: bb game 2_0
+      213: 4268008948038434379
+    second: bb logo 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bb game 2_0
+      name: bb logo 1_0
       rect:
         serializedVersion: 2
-        x: 17
-        y: 22
-        width: 483
-        height: 470
+        x: 0
+        y: 0
+        width: 512
+        height: 512
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e8c7f72e7452e1860800000000000000
-      internalID: 7502475019918736526
+      spriteID: b4ef40e76830b3b30800000000000000
+      internalID: 4268008948038434379
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bb game 2_0: 7502475019918736526
+      bb logo 1_0: 4268008948038434379
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
