@@ -48,6 +48,7 @@ public class HomeUIManager : MonoBehaviour
     public Text LeaderboardUserNameText;
     public Text LeaderboardUserTrophiesText;
     public Image LeaderboardUserAvatarImage;
+    public GameObject ErrorText;
 
     // Track selected boosters
     private System.Collections.Generic.List<string> selectedBoosters = new System.Collections.Generic.List<string>();
@@ -65,6 +66,7 @@ public class HomeUIManager : MonoBehaviour
         isBlocked = PlayerPrefs.GetInt(BlockedKey, 0) == 1;
         SetBlockedPanelVisible(isBlocked);
         SetInternetConnectivityPanelVisible(false);
+        if (ErrorText != null) ErrorText.SetActive(false);
 
         UpdateLevelUI();
         UpdateBoosterCountUI();
@@ -505,14 +507,19 @@ public class HomeUIManager : MonoBehaviour
 
     private static string GetOrCreateDeviceId()
     {
-        const string key = "DeviceId";
-        string existing = PlayerPrefs.GetString(key, "");
-        if (!string.IsNullOrEmpty(existing)) return existing;
-
-        string created = Guid.NewGuid().ToString("N");
-        PlayerPrefs.SetString(key, created);
-        PlayerPrefs.Save();
-        return created;
+        string deviceId = "";
+#if UNITY_ANDROID && !UNITY_EDITOR
+        AndroidJavaClass up = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+        AndroidJavaObject currentActivity = up.GetStatic<AndroidJavaObject>("currentActivity");
+        AndroidJavaObject contentResolver = currentActivity.Call<AndroidJavaObject>("getContentResolver");
+        AndroidJavaClass secure = new AndroidJavaClass("android.provider.Settings$Secure");
+        deviceId = secure.CallStatic<string>("getString", contentResolver, "android_id");
+#elif UNITY_IOS && !UNITY_EDITOR
+        deviceId = UnityEngine.iOS.Device.vendorIdentifier;
+#else
+        deviceId = SystemInfo.deviceUniqueIdentifier;
+#endif
+        return deviceId;
     }
 
     private static string GetOsString()
@@ -959,7 +966,16 @@ public class HomeUIManager : MonoBehaviour
     {
         if (isBlocked) return;
         int lives = GetCurrentLife();
-        if (lives <= 0) return;
+        if (lives <= 0)
+        {
+            if (ErrorText != null)
+            {
+                ErrorText.SetActive(true);
+                StopCoroutine("HideErrorTextAfterDelay");
+                StartCoroutine("HideErrorTextAfterDelay", 1f);
+            }
+            return;
+        }
         if (ShouldBlockPlayForOfflineLevel())
         {
             SetInternetConnectivityPanelVisible(true);
@@ -982,6 +998,12 @@ public class HomeUIManager : MonoBehaviour
         }
         ProgressDataManager.EnsureInstance();
         SceneManager.LoadScene("Gameplay");
+    }
+
+    private IEnumerator HideErrorTextAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (ErrorText != null) ErrorText.SetActive(false);
     }
 
     private void ConsumeSelectedBoosters()

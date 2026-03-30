@@ -21,6 +21,7 @@ public class BoardManager : MonoBehaviour
     private int currentMoves;
     private int score;
     private bool isGameOver = false;
+    private bool lifeConsumedThisLevel = false;
 
     [Header("References")]
     public UIManager uiManager;
@@ -578,10 +579,10 @@ public class BoardManager : MonoBehaviour
         if (isGameOver) return;
         isGameOver = true;
         state = GameState.Lose;
-        HomeUIManager.ConsumeLifeForLose();
         
-        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
-        ProgressDataManager.EnsureInstance().ApplyLevelFailed(currentLevel, -5);
+        // Removed immediate life consumption. 
+        // Life will be consumed only if they don't buy extra moves and win.
+        // This is handled in UIManager.OnLoseContinueButton or ConsumeLifeForQuitIfNeeded.
         
         StartCoroutine(ShowLoseRoutine());
     }
@@ -594,6 +595,15 @@ public class BoardManager : MonoBehaviour
         if (maxMoves <= 0)
         {
             return minTrophies;
+        }
+
+        // If they bought extra moves, ensure they still get a fair trophy count (5-8).
+        int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        int purchases = PlayerPrefs.GetInt("Level_" + currentLevel + "_ExtraMovesPurchases", 0);
+        if (purchases > 0)
+        {
+            // Being slightly more generous for wins with bought moves.
+            return Random.Range(5, 9); 
         }
 
         float ratio = Mathf.Clamp01((float)currentMoves / maxMoves);
@@ -795,13 +805,21 @@ public class BoardManager : MonoBehaviour
 
     private void OnApplicationPause(bool pause)
     {
-        if (pause) ConsumeLifeForQuitIfNeeded();
+        // Don't consume life on simple pause; only if the app is quit or the level is explicitly exited.
+        // if (pause) ConsumeLifeForQuitIfNeeded();
     }
 
     public void ConsumeLifeForQuitIfNeeded()
     {
         if (!Application.isPlaying) return;
-        if (isGameOver) return;
+        
+        // Never consume life if we won
+        if (state == GameState.Win) return;
+        
+        // Only consume life once per level attempt
+        if (lifeConsumedThisLevel) return;
+
+        lifeConsumedThisLevel = true;
         HomeUIManager.ConsumeLifeForLose();
 
         int currentLevel = PlayerPrefs.GetInt("CurrentLevel", 1);

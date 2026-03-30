@@ -273,6 +273,13 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         AudioListener.pause = false;
+        
+        var board = FindObjectOfType<BoardManager>();
+        if (board != null)
+        {
+            board.ConsumeLifeForQuitIfNeeded();
+        }
+        
         UnityEngine.SceneManagement.SceneManager.LoadScene("Home");
     }
 
